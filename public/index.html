@@ -35,7 +35,7 @@
             <div class="shadow-lg card">
               <div class="card-body">
                 <h5 class="card-title"><a target="_blank" :href="event.url">{{ event.name }}</a></h5>
-                <h6 class="card-subtitle mb-2 text-muted">{{ event.address }}</a></h6>
+                <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
                 <p><a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">{{ event.distLabel }} mi</a></p>
                 <ul v-if="event.fajrIqama" class="list-group">
                   <li class="list-group-item">Fajr: {{ event.fajrIqama }}</li>
