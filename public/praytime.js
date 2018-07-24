@@ -1,3 +1,4 @@
+/* global Vue, firebase, google */
 const vApp = new Vue({
   el: '#app',
   data: {
@@ -23,7 +24,7 @@ const updatePosition = async (message, location) => {
 
   // TODO: add geo bounds to this query
   const querySnapshotRef = await db.collection('Events').get()
-  for (doc of querySnapshotRef.docs) {
+  for (const doc of querySnapshotRef.docs) {
     // doc.data() is never undefined for query doc snapshots
     // console.log(doc.id, " => ", doc.data());
     const evt = doc.data()

@@ -46,6 +46,9 @@
                 </ul>
                 <p v-else>Check website for prayer times.</p>
               </div>
+              <div class="card-body">
+                <a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report an issue</a>
+              </div>
           </template>
       </div>
 
