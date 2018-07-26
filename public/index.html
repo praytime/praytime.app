@@ -8,7 +8,13 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
 
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <!-- dev version -->
+    <!--
+      <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+      -->
+
+    <!-- prod version -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
 
     <!-- Firebase App is always required and must be first -->
     <!-- script src="https://www.gstatic.com/firebasejs/5.2.0/firebase-app.js"></script-->
@@ -20,39 +26,49 @@
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-GheSc0eKtS4paXu3SjJDsPGxA5WReRk&libraries=geometry,places"></script>
 
-    <title>praytime.app</title>
+    <title>praytime | masjid iqamah times</title>
   </head>
   <body>
-
-    <div class="container">
+    <div id="app" class="container">
+      <h1>praytime
+        <small class="text-muted">masjid iqamah times</small>
+      </h1>
+      <p>praytime tracks masjid iqamah times by scraping times published on masjid web sites. Enter your location (address or city) in the box below. praytime is <a href="https://github.com/praytime/praytime">open source</a>.</p>
       <div id="locationField">
         <input id="autocomplete" placeholder="Enter a location" type="text" />
       </div>
-
-      <div id="app">
-        {{ message }}
-          <template v-for="event in events">
-            <div class="shadow-lg card">
-              <div class="card-body">
-                <h5 class="card-title"><a target="_blank" :href="event.url">{{ event.name }}</a></h5>
-                <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
-                <p><a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">{{ event.distLabel }} mi</a></p>
-                <ul v-if="event.fajrIqama" class="list-group">
-                  <li class="list-group-item">Fajr: {{ event.fajrIqama }}</li>
-                  <li class="list-group-item">Dhuhr: {{ event.zuhrIqama }}</li>
-                  <li class="list-group-item">Asr: {{ event.asrIqama }}</li>
-                  <li class="list-group-item">Maghrib: {{ event.maghribIqama }}</li>
-                  <li class="list-group-item">Isha: {{ event.ishaIqama }}</li>
-                </ul>
-                <p v-else>Check website for prayer times.</p>
-              </div>
-              <div class="card-body">
-                <a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report an issue</a>
-              </div>
-          </template>
-      </div>
-
-      <a target="_blank" href="https://github.com/praytime/praytime.app">github</a>
+      <div v-if="message" v-bind:class="messageClass">{{ message }}</div>
+      <template v-for="event in events">
+        <div class="shadow-lg card mb-2">
+          <div class="card-body">
+            <h5 class="card-title"><a target="_blank" :href="event.url">{{ event.name }}</a></h5>
+            <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
+            <p><a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">{{ event.distLabel }} mi</a></p>
+            <dl v-if="event.fajrIqama" class="row">
+              <dl class="col-sm-3">Fajr</dl>
+              <dt class="col-sm-9">{{ event.fajrIqama }}</dt>
+              <dl class="col-sm-3">Zuhr</dl>
+              <dt class="col-sm-9">{{ event.zuhrIqama }}</dt>
+              <dl class="col-sm-3">Asr</dl>
+              <dt class="col-sm-9">{{ event.asrIqama }}</dt>
+              <dl class="col-sm-3">Maghrib</dl>
+              <dt class="col-sm-9">{{ event.maghribIqama }}</dt>
+              <dl class="col-sm-3">Isha</dl>
+              <dt class="col-sm-9">{{ event.ishaIqama }}</dt>
+              <template v-if="event.juma1">
+                <dl class="col-sm-3">Juma</dl>
+                <dt class="col-sm-9">{{ event.juma1 }}</dt>
+              </template>
+              <template v-if="event.juma2">
+                <dl class="col-sm-3">2nd Juma</dl>
+                <dt class="col-sm-9">{{ event.juma2 }}</dt>
+              </template>
+            </dl>
+            <p v-else>Check website for prayer times.</p>
+            <a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report missing or incorrect data</a>
+          </div>
+        </div>
+      </template>
     </div>
 
     <!-- Optional JavaScript -->
@@ -60,8 +76,7 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/js/bootstrap.min.js" integrity="sha384-o+RDsa0aLu++PJvFqy8fFScvbHFLtbvScb8AjopnFD+iEQ7wo/CG0xlczd+2O/em" crossorigin="anonymous"></script>
-
+    <!-- praytime -->
     <script src="praytime.js"></script>
-
   </body>
 </html>

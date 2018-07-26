@@ -3,6 +3,7 @@ const vApp = new Vue({
   el: '#app',
   data: {
     message: '',
+    messageClass: 'text-secondary',
     events: []
   }
 })
@@ -17,8 +18,9 @@ function getFirebaseDb () {
 
 const db = getFirebaseDb()
 
-const updatePosition = async (message, location) => {
-  vApp.message = message
+const updatePosition = async (locationDescription, location) => {
+  vApp.message = 'Getting prayer times for ' + locationDescription + '...'
+  vApp.messageClass = 'text-secondary'
 
   const events = []
 
@@ -38,6 +40,8 @@ const updatePosition = async (message, location) => {
   // sort by distance
   events.sort((a, b) => { return a.distance - b.distance })
 
+  vApp.message = 'Prayer times for ' + locationDescription
+  vApp.messageClass = 'text-success'
   vApp.events = events
 }
 
@@ -50,14 +54,15 @@ autocomplete.addListener('place_changed', () => {
   const place = autocomplete.getPlace()
   if (place.geometry) {
     // got results
-    updatePosition("Results for '" + place.name + "'", place.geometry.location)
+    updatePosition(place.name, place.geometry.location)
   } else {
     // need to do a search
     geocoder.geocode({ address: document.getElementById('autocomplete').value }, (results, status) => {
       if (status === 'OK') {
-        updatePosition("Results for '" + results[0].formatted_address + "'", results[0].geometry.location)
+        updatePosition(results[0].formatted_address, results[0].geometry.location)
       } else {
         vApp.message = 'Not found: ' + status
+        vApp.messageClass = 'text-warning'
       }
     })
   }
@@ -65,23 +70,29 @@ autocomplete.addListener('place_changed', () => {
 
 // Try to automatically get the user location from the browser
 if (navigator.geolocation) {
+  vApp.message = 'Getting current location...'
+  vApp.messageClass = 'text-secondary'
   navigator.geolocation.getCurrentPosition((pos) => {
-    updatePosition('Results for: ' + pos.coords.latitude + ', ' + pos.coords.longitude, new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude))
+    updatePosition(pos.coords.latitude + ',' + pos.coords.longitude, new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude))
   }, (error) => {
     switch (error.code) {
       case error.PERMISSION_DENIED:
-        // vApp.message = "Location permission denied, enter your location in the search box"
+        vApp.message = 'The browser denied the request for current location, please enable this in your browser settings or enter your location (address or city) in the search box above.'
+        vApp.messageClass = 'text-info'
         break
       case error.POSITION_UNAVAILABLE:
-        // vApp.message = "Location information is unavailable, enter your location in the search box"
-        break
       case error.TIMEOUT:
+        vApp.message = 'Location information is unavailable, please enter your location (address or city) in the search box above.'
+        vApp.messageClass = 'text-info'
+        break
       case error.UNKNOWN_ERROR:
       default:
-        // vApp.message = "Enter your location in the search box."
+        vApp.message = 'Please enter your location (address or city) in the search box above.'
+        vApp.messageClass = 'text-info'
         break
     }
   })
 } else {
-  // vApp.message = "Geolocation not supported by this browser"
+  vApp.message = 'Please enter your location (address or city) in the search box above.'
+  vApp.messageClass = 'text-info'
 }
