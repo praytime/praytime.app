@@ -44,28 +44,21 @@
             <h5 class="card-title"><a target="_blank" :href="event.url">{{ event.name }}</a></h5>
             <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
             <p><a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">{{ event.distLabel }} mi</a></p>
-            <dl v-if="event.fajrIqama" class="row">
-              <dl class="col-sm-3">Fajr</dl>
-              <dt class="col-sm-9">{{ event.fajrIqama }}</dt>
-              <dl class="col-sm-3">Zuhr</dl>
-              <dt class="col-sm-9">{{ event.zuhrIqama }}</dt>
-              <dl class="col-sm-3">Asr</dl>
-              <dt class="col-sm-9">{{ event.asrIqama }}</dt>
-              <dl class="col-sm-3">Maghrib</dl>
-              <dt class="col-sm-9">{{ event.maghribIqama }}</dt>
-              <dl class="col-sm-3">Isha</dl>
-              <dt class="col-sm-9">{{ event.ishaIqama }}</dt>
+            <ul v-if="event.fajrIqama" class="list-group">
+              <li class="list-group-item">Fajr: {{ event.fajrIqama }}</li>
+              <li class="list-group-item">Dhuhr: {{ event.zuhrIqama }}</li>
+              <li class="list-group-item">Asr: {{ event.asrIqama }}</li>
+              <li class="list-group-item">Maghrib: {{ event.maghribIqama }}</li>
+              <li class="list-group-item">Isha: {{ event.ishaIqama }}</li>
               <template v-if="event.juma1">
-                <dl class="col-sm-3">Juma</dl>
-                <dt class="col-sm-9">{{ event.juma1 }}</dt>
+                <li class="list-group-item">Juma: {{ event.juma1 }}</li>
               </template>
               <template v-if="event.juma2">
-                <dl class="col-sm-3">2nd Juma</dl>
-                <dt class="col-sm-9">{{ event.juma2 }}</dt>
+                <li class="list-group-item">2nd Juma: {{ event.juma2 }}</li>
               </template>
-            </dl>
+            </ul>
             <p v-else>Check website for prayer times.</p>
-            <a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report missing or incorrect data</a>
+            <small><a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report missing or incorrect data</a></small>
           </div>
         </div>
       </template>
