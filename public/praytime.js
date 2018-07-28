@@ -8,6 +8,8 @@ const vApp = new Vue({
   }
 })
 
+const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+
 function getFirebaseDb () {
   // Initialize Firebase
   const fbApp = firebase.initializeApp({ projectId: 'praytime-b76cb' })
@@ -34,6 +36,7 @@ const updatePosition = async (locationDescription, location) => {
     const distance = google.maps.geometry.spherical.computeDistanceBetween(location, new google.maps.LatLng(geo.latitude, geo.longitude))
     const distLabel = (distance * 0.000621371192).toFixed(2)
     const merged = Object.assign({ distance: distance, distLabel: distLabel }, evt)
+    merged.diffTz = (userTz !== evt.timeZoneId)
     events.push(merged)
   }
 

@@ -33,7 +33,8 @@
       <h1>praytime
         <small class="text-muted">masjid iqamah times</small>
       </h1>
-      <p>praytime is an <a href="https://github.com/praytime/praytime">open source</a> project that tracks iqamah times by reading them directly from masjid web sites. Anybody can add or edit masaajid.</p>
+      <p>praytime crawls the web for masjid iqamah times and makes them searchable by location.</p>
+      <p>praytime is an <a href="https://github.com/praytime/praytime">open source</a> project that is open to contributions. Anybody can add new masaajid or modify existing crawlers.</p>
       <p>Masaajid are limited to the Chicagoland area currently, but new cities will be added.</p>
       <p>Enter your location (address or city) in the box below to find iqamah times near you.</p>
       <div id="locationField">
@@ -46,7 +47,7 @@
             <h5 class="card-title"><a target="_blank" :href="event.url">{{ event.name }}</a></h5>
             <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
             <p><a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">{{ event.distLabel }} mi</a></p>
-            <ul v-if="event.fajrIqama" class="list-group">
+            <ul v-if="event.fajrIqama" class="list-group mb-1">
               <li class="list-group-item">Fajr: {{ event.fajrIqama }}</li>
               <li class="list-group-item">Dhuhr: {{ event.zuhrIqama }}</li>
               <li class="list-group-item">Asr: {{ event.asrIqama }}</li>
@@ -60,6 +61,7 @@
               </template>
             </ul>
             <p v-else>Check website for prayer times.</p>
+            <p v-if="event.diffTz" class="text-warning">Note: This masjid may be in a a different time zone</p>
             <small><a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report missing or incorrect data</a></small>
           </div>
         </div>
