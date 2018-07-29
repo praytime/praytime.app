@@ -8,13 +8,10 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
 
-    <!-- dev version -->
-    <!--
-      <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-      -->
-
-    <!-- prod version -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    -->
 
     <!-- Firebase App is always required and must be first -->
     <!-- script src="https://www.gstatic.com/firebasejs/5.2.0/firebase-app.js"></script-->
@@ -62,7 +59,10 @@
             </ul>
             <p v-else>Check website for prayer times.</p>
             <p v-if="event.diffTz" class="text-warning">Note: This masjid may be in a a different time zone</p>
-            <small><a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report missing or incorrect data</a></small>
+            <small>
+              last updated {{ event.updatedLabel }} ago<br>
+              <a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report missing or incorrect data</a>
+            </small>
           </div>
         </div>
       </template>

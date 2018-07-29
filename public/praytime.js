@@ -29,14 +29,16 @@ const updatePosition = async (locationDescription, location) => {
   // TODO: add geo bounds to this query
   const querySnapshotRef = await db.collection('Events').get()
   for (const doc of querySnapshotRef.docs) {
-    // doc.data() is never undefined for query doc snapshots
-    // console.log(doc.id, " => ", doc.data());
     const evt = doc.data()
     const geo = evt.geo
     const distance = google.maps.geometry.spherical.computeDistanceBetween(location, new google.maps.LatLng(geo.latitude, geo.longitude))
     const distLabel = (distance * 0.000621371192).toFixed(2)
-    const merged = Object.assign({ distance: distance, distLabel: distLabel }, evt)
-    merged.diffTz = (userTz !== evt.timeZoneId)
+    const merged = Object.assign({
+      distance: distance,
+      distLabel: distLabel,
+      diffTz: (userTz !== evt.timeZoneId),
+      updatedLabel: timeSince(evt.crawlTime.toDate())
+    }, evt)
     events.push(merged)
   }
 
@@ -98,4 +100,51 @@ if (navigator.geolocation) {
 } else {
   vApp.message = 'Please enter your location (address or city) in the search box above.'
   vApp.messageClass = 'text-info'
+}
+
+// https://stackoverflow.com/a/34901423
+function timeSince (date) {
+  let secondsSince = Math.floor((new Date() - date) / 1000)
+  const returnValue = []
+
+  const units = [
+    {
+      k: 'years',
+      v: 60 * 60 * 24 * 365
+    },
+    {
+      k: 'months',
+      v: 60 * 60 * 24 * 30
+    },
+    {
+      k: 'weeks',
+      v: 60 * 60 * 24 * 7
+    },
+    {
+      k: 'days',
+      v: 60 * 60 * 24
+    },
+    {
+      k: 'hours',
+      v: 60 * 60
+    },
+    {
+      k: 'minutes',
+      v: 60
+    }
+  ]
+
+  for (const unit of units) {
+    const interval = Math.floor(secondsSince / unit.v)
+    if (interval > 1) {
+      returnValue.push(interval + ' ' + unit.k)
+    }
+    secondsSince -= interval * unit.v
+  }
+
+  if (Object.keys(returnValue).length > 0) {
+    return returnValue.join(', ') + ', and ' + secondsSince + ' seconds'
+  }
+
+  return secondsSince + ' seconds'
 }
