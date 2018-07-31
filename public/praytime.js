@@ -12,7 +12,8 @@ const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
 function getFirebaseDb () {
   // Initialize Firebase
-  const fbApp = firebase.initializeApp({ projectId: 'praytime-b76cb' })
+  // const fbApp = firebase.initializeApp({ projectId: 'praytime-b76cb' })
+  const fbApp = firebase.initializeApp({ projectId: 'scratch-4de9c' })
   const db = firebase.firestore(fbApp)
   db.settings({ timestampsInSnapshots: true })
   return db

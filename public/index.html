@@ -8,10 +8,10 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
 
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
     <!--
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
     -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
     <!-- Firebase App is always required and must be first -->
     <!-- script src="https://www.gstatic.com/firebasejs/5.2.0/firebase-app.js"></script-->
@@ -45,16 +45,16 @@
             <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
             <p><a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">{{ event.distLabel }} mi</a></p>
             <ul v-if="event.fajrIqama" class="list-group mb-1">
-              <li class="list-group-item">Fajr: {{ event.fajrIqama }}</li>
-              <li class="list-group-item">Dhuhr: {{ event.zuhrIqama }}</li>
-              <li class="list-group-item">Asr: {{ event.asrIqama }}</li>
-              <li class="list-group-item">Maghrib: {{ event.maghribIqama }}</li>
-              <li class="list-group-item">Isha: {{ event.ishaIqama }}</li>
+              <li class="list-group-item" v-bind:class="{ 'text-info': event.prevFajrIqama }">Fajr: {{ event.fajrIqama }}</li>
+              <li class="list-group-item" v-bind:class="{ 'text-info': event.prevZuhrIqama }">Dhuhr: {{ event.zuhrIqama }}</li>
+              <li class="list-group-item" v-bind:class="{ 'text-info': event.prevAsrIqama }">Asr: {{ event.asrIqama }}</li>
+              <li class="list-group-item" v-bind:class="{ 'text-info': event.prevMaghribIqama }">Maghrib: {{ event.maghribIqama }}</li>
+              <li class="list-group-item" v-bind:class="{ 'text-info': event.prevIshaIqama }">Isha: {{ event.ishaIqama }}</li>
               <template v-if="event.juma1">
-                <li class="list-group-item">Juma: {{ event.juma1 }}</li>
+                <li class="list-group-item" v-bind:class="{ 'text-info': event.prevJuma1 }">Juma: {{ event.juma1 }}</li>
               </template>
               <template v-if="event.juma2">
-                <li class="list-group-item">2nd Juma: {{ event.juma2 }}</li>
+                <li class="list-group-item" v-bind:class="{ 'text-info': event.prevJuma2 }">2nd Juma: {{ event.juma2 }}</li>
               </template>
             </ul>
             <p v-else>Check website for prayer times.</p>
