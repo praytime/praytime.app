@@ -44,20 +44,41 @@
             <h5 class="card-title"><a target="_blank" :href="event.url">{{ event.name }}</a></h5>
             <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
             <p><a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">{{ event.distLabel }} mi</a></p>
-            <ul v-if="event.fajrIqama" class="list-group mb-1">
-              <li class="list-group-item">Fajr: {{ event.fajrIqama }}</li>
-              <li class="list-group-item">Dhuhr: {{ event.zuhrIqama }}</li>
-              <li class="list-group-item">Asr: {{ event.asrIqama }}</li>
-              <li class="list-group-item">Maghrib: {{ event.maghribIqama }}</li>
-              <li class="list-group-item">Isha: {{ event.ishaIqama }}</li>
-              <template v-if="event.juma1">
-                <li class="list-group-item">Juma: {{ event.juma1 }}</li>
-              </template>
-              <template v-if="event.juma2">
-                <li class="list-group-item">2nd Juma: {{ event.juma2 }}</li>
-              </template>
-            </ul>
-            <p v-else>Check website for prayer times.</p>
+            <table class="table table-sm">
+              <tr v-if="event.fajrIqama">
+                <td class="w-25">Fajr</td>
+                <td>{{ event.fajrIqama }}</td>
+              </tr>
+              <tr v-if="event.zuhrIqama">
+                <td class="w-25">Zuhr</td>
+                <td>{{ event.zuhrIqama }}</td>
+              </tr>
+              <tr v-if="event.asrIqama">
+                <td class="w-25">Asr</td>
+                <td>{{ event.asrIqama }}</td>
+              </tr>
+              <tr v-if="event.maghribIqama">
+                <td class="w-25">Maghrib</td>
+                <td>{{ event.maghribIqama }}</td>
+              </tr>
+              <tr v-if="event.ishaIqama">
+                <td class="w-25">Isha</td>
+                <td>{{ event.ishaIqama }}</td>
+              </tr>
+              <tr v-if="event.juma1">
+                <td class="w-25">Juma</td>
+                <td>{{ event.juma1 }}</td>
+              </tr>
+              <tr v-if="event.juma2">
+                <td class="w-25">Juma</td>
+                <td>{{ event.juma2 }}</td>
+              </tr>
+              <tr v-if="event.juma3">
+                <td class="w-25">Juma</td>
+                <td>{{ event.juma3 }}</td>
+              </tr>
+            </table>
+            <p v-if="!(event.fajrIqama || event.juma1)">Check website for prayer times.</p>
             <p v-if="event.diffTz" class="text-warning">Note: This masjid may be in a a different time zone</p>
             <small>
               last updated {{ event.updatedLabel }} ago<br>
