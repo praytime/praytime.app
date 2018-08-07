@@ -37,6 +37,14 @@ const updatePosition = async (locationDescription, location) => {
       distance: distance,
       distLabel: distLabel,
       diffTz: (userTz !== evt.timeZoneId),
+      fajrModified: (evt.fajrIqamaModified && hoursSince(evt.fajrIqamaModified.toDate()) < 24),
+      zuhrModified: (evt.zuhrIqamaModified && hoursSince(evt.zuhrIqamaModified.toDate()) < 24),
+      asrModified: (evt.asrIqamaModified && hoursSince(evt.asrIqamaModified.toDate()) < 24),
+      maghribModified: (evt.maghribIqamaModified && hoursSince(evt.maghribIqamaModified.toDate()) < 24),
+      ishaModified: (evt.ishaIqamaModified && hoursSince(evt.ishaIqamaModified.toDate()) < 24),
+      juma1Modified: (evt.juma1Modified && hoursSince(evt.juma1Modified.toDate()) < 24),
+      juma2Modified: (evt.juma2Modified && hoursSince(evt.juma2Modified.toDate()) < 24),
+      juma3Modified: (evt.juma3Modified && hoursSince(evt.juma3Modified.toDate()) < 24),
       updatedLabel: timeSince(evt.crawlTime.toDate())
     }, evt)
     events.push(merged)
@@ -100,6 +108,10 @@ if (navigator.geolocation) {
 } else {
   vApp.message = 'Please enter your location (address or city) in the search box above.'
   vApp.messageClass = 'text-info'
+}
+
+function hoursSince (date) {
+  return Math.floor((new Date() - date) / (1000 * 60 * 60))
 }
 
 // https://stackoverflow.com/a/34901423
