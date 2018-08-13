@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "praytime-b76cb"
+    "default": "praytime-b76cb",
+    "dev": "scratch-4de9c"
   }
 }
