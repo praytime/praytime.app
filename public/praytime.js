@@ -10,15 +10,25 @@ const vApp = new Vue({
 
 const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-function getFirebaseDb () {
-  // Initialize Firebase
-  const fbApp = firebase.initializeApp({ projectId: 'praytime-b76cb' })
-  const db = firebase.firestore(fbApp)
-  db.settings({ timestampsInSnapshots: true })
-  return db
-}
+const db = firebase.firestore()
+db.settings({ timestampsInSnapshots: true })
 
-const db = getFirebaseDb()
+// Retrieve Firebase Messaging object.
+const messaging = firebase.messaging()
+
+messaging.usePublicVapidKey('BEgZlt2y5qeI4Ca3AV4s8eqyWIxMu4tYgN1ywYt1crenySm-hynwa72cEX1HMcKkfC0To9aNOPBcMv21MChqvmU')
+
+messaging.requestPermission()
+  .then(function () {
+    console.log('Notification permission granted.')
+    return messaging.getToken()
+  })
+  .then(function (token) {
+    console.log(token)
+  })
+  .catch(function (err) {
+    console.log('Unable to get permission to notify.', err)
+  })
 
 const updatePosition = async (locationDescription, location) => {
   vApp.message = 'Getting prayer times for ' + locationDescription + '...'

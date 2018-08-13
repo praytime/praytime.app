@@ -5,6 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="images/icons-192.png">
+
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css" integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
 
@@ -15,11 +18,13 @@
 
     <!-- Firebase App is always required and must be first -->
     <!-- script src="https://www.gstatic.com/firebasejs/5.2.0/firebase-app.js"></script-->
-    <script src="/__/firebase/5.3.0/firebase-app.js"></script>
+    <script src="/__/firebase/5.3.1/firebase-app.js"></script>
 
     <!-- Add additional services that you want to use -->
     <!--script src="https://www.gstatic.com/firebasejs/5.2.0/firebase-firestore.js"></script-->
-    <script src="/__/firebase/5.3.0/firebase-firestore.js"></script>
+    <script src="/__/firebase/5.3.1/firebase-firestore.js"></script>
+    <script src="/__/firebase/5.3.1/firebase-messaging.js"></script>
+    <script src="/__/firebase/init.js"></script>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-GheSc0eKtS4paXu3SjJDsPGxA5WReRk&libraries=geometry,places"></script>
 
@@ -31,8 +36,7 @@
         <small class="text-muted">masjid iqamah times</small>
       </h1>
       <p>praytime crawls the web for masjid iqamah times and makes them searchable by location.</p>
-      <p>praytime is an <a href="https://github.com/praytime/praytime">open source</a> project that is open to contributions. Anybody can add new masaajid or modify existing crawlers.</p>
-      <p>Masaajid are mostly from the Chicagoland area currently. <a href="https://gitreports.com/issue/praytime/praytime?issue_title=New+Masjid+Request">Open a ticket to have a new masjid added.</a></p>
+      <p>praytime is an <a href="https://github.com/praytime/praytime">open source</a> project that is open to contributions. Anybody can add new masaajid or modify existing crawlers. <a href="https://gitreports.com/issue/praytime/praytime?issue_title=New+Masjid+Request">Open a ticket to have a new masjid added.</a></p>
       <p>Enter your location (address or city) in the box below to find iqamah times near you.</p>
       <div id="locationField">
         <input id="autocomplete" placeholder="Enter a location" type="text" />
@@ -87,6 +91,9 @@
           </div>
         </div>
       </template>
+      <p>
+        <small>Icon made by Freepik from www.flaticon.com</small>
+      </p>
     </div>
 
     <!-- Optional JavaScript -->
