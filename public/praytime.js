@@ -10,15 +10,8 @@ const vApp = new Vue({
 
 const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-function getFirebaseDb () {
-  // Initialize Firebase
-  const fbApp = firebase.initializeApp({ projectId: 'praytime-b76cb' })
-  const db = firebase.firestore(fbApp)
-  db.settings({ timestampsInSnapshots: true })
-  return db
-}
-
-const db = getFirebaseDb()
+const db = firebase.firestore()
+db.settings({ timestampsInSnapshots: true })
 
 const updatePosition = async (locationDescription, location) => {
   vApp.message = 'Getting prayer times for ' + locationDescription + '...'
@@ -114,7 +107,6 @@ function hoursSince (date) {
   return Math.floor((new Date() - date) / (1000 * 60 * 60))
 }
 
-// https://stackoverflow.com/a/34901423
 function timeSince (date) {
   let secondsSince = Math.floor((new Date() - date) / 1000)
   const returnValue = []
