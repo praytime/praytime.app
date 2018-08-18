@@ -1,7 +1,13 @@
 /* global Vue, firebase, google */
+
+//
+// GLOBALS
+//
+
 const vApp = new Vue({
   el: '#app',
   data: {
+    inputDisabled: false,
     message: '',
     messageClass: 'text-secondary',
     events: []
@@ -13,74 +19,59 @@ const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 const db = firebase.firestore()
 db.settings({ timestampsInSnapshots: true })
 
-const updatePosition = async (locationDescription, location) => {
-  vApp.message = 'Getting prayer times for ' + locationDescription + '...'
-  vApp.messageClass = 'text-secondary'
-
-  const events = []
-
-  // TODO: add geo bounds to this query
-  const querySnapshotRef = await db.collection('Events').get()
-  for (const doc of querySnapshotRef.docs) {
-    const evt = doc.data()
-    const geo = evt.geo
-    const distance = google.maps.geometry.spherical.computeDistanceBetween(location, new google.maps.LatLng(geo.latitude, geo.longitude))
-    const distLabel = (distance * 0.000621371192).toFixed(2)
-    const merged = Object.assign({
-      distance: distance,
-      distLabel: distLabel,
-      diffTz: (userTz !== evt.timeZoneId),
-      fajrModified: (evt.fajrIqamaModified && hoursSince(evt.fajrIqamaModified.toDate()) < 24),
-      zuhrModified: (evt.zuhrIqamaModified && hoursSince(evt.zuhrIqamaModified.toDate()) < 24),
-      asrModified: (evt.asrIqamaModified && hoursSince(evt.asrIqamaModified.toDate()) < 24),
-      maghribModified: (evt.maghribIqamaModified && hoursSince(evt.maghribIqamaModified.toDate()) < 24),
-      ishaModified: (evt.ishaIqamaModified && hoursSince(evt.ishaIqamaModified.toDate()) < 24),
-      juma1Modified: (evt.juma1Modified && hoursSince(evt.juma1Modified.toDate()) < 24),
-      juma2Modified: (evt.juma2Modified && hoursSince(evt.juma2Modified.toDate()) < 24),
-      juma3Modified: (evt.juma3Modified && hoursSince(evt.juma3Modified.toDate()) < 24),
-      updatedLabel: timeSince(evt.crawlTime.toDate())
-    }, evt)
-    events.push(merged)
-  }
-
-  // sort by distance
-  events.sort((a, b) => { return a.distance - b.distance })
-
-  vApp.message = 'Prayer times for ' + locationDescription
-  vApp.messageClass = 'text-success'
-  vApp.events = events
-}
-
 const geocoder = new google.maps.Geocoder()
 const autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'), {
   types: [ 'geocode' ],
   fields: [ 'name', 'geometry.location' ]
 })
-autocomplete.addListener('place_changed', () => {
+autocomplete.addListener('place_changed', gmapsAutocompletePlaceChangeListener)
+
+// If geolocation permission is granted, just load results for the current location automatically
+if (navigator.permissions && navigator.geolocation) {
+  navigator.permissions.query({name: 'geolocation'})
+    .then(function (result) {
+      if (result.state === 'granted') {
+        getCurrentPosition()
+      }
+    })
+    .catch(function (err) {
+      console.log(err)
+    })
+}
+
+//
+// FUNCTIONS
+//
+
+// gmaps autocomplete handler
+function gmapsAutocompletePlaceChangeListener () {
   const place = autocomplete.getPlace()
   if (place.geometry) {
     // got results
-    updatePosition(place.name, place.geometry.location)
+    getPrayerTimesForLocation(place.name, place.geometry.location)
   } else {
     // need to do a search
     geocoder.geocode({ address: document.getElementById('autocomplete').value }, (results, status) => {
       if (status === 'OK') {
-        updatePosition(results[0].formatted_address, results[0].geometry.location)
+        getPrayerTimesForLocation(results[0].formatted_address, results[0].geometry.location)
       } else {
         vApp.message = 'Not found: ' + status
         vApp.messageClass = 'text-warning'
       }
     })
   }
-})
+}
 
-// Try to automatically get the user location from the browser
-if (navigator.geolocation) {
+// Query browser GPS info
+function getCurrentPosition () {
+  vApp.inputDisabled = true
   vApp.message = 'Getting current location...'
   vApp.messageClass = 'text-secondary'
   navigator.geolocation.getCurrentPosition((pos) => {
-    updatePosition(pos.coords.latitude + ',' + pos.coords.longitude, new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude))
+    vApp.inputDisabled = false
+    getPrayerTimesForLocation(pos.coords.latitude + ',' + pos.coords.longitude, new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude))
   }, (error) => {
+    vApp.inputDisabled = false
     switch (error.code) {
       case error.PERMISSION_DENIED:
         vApp.message = 'The browser denied the request for current location, please enable this in your browser settings or enter your location (address or city) in the search box above.'
@@ -98,9 +89,50 @@ if (navigator.geolocation) {
         break
     }
   })
-} else {
-  vApp.message = 'Please enter your location (address or city) in the search box above.'
-  vApp.messageClass = 'text-info'
+}
+
+// Perform firebase query for given location
+function getPrayerTimesForLocation (locationDescription, location) {
+  vApp.message = 'Getting prayer times for ' + locationDescription + '...'
+  vApp.messageClass = 'text-secondary'
+
+  // TODO: add geo bounds to this query
+  db.collection('Events').get()
+    .then((querySnapshotRef) => {
+      const events = []
+      for (const doc of querySnapshotRef.docs) {
+        const evt = doc.data()
+        const geo = evt.geo
+        const distance = google.maps.geometry.spherical.computeDistanceBetween(location, new google.maps.LatLng(geo.latitude, geo.longitude))
+        const distLabel = (distance * 0.000621371192).toFixed(2)
+        const merged = Object.assign({
+          distance: distance,
+          distLabel: distLabel,
+          diffTz: (userTz !== evt.timeZoneId),
+          fajrModified: (evt.fajrIqamaModified && hoursSince(evt.fajrIqamaModified.toDate()) < 24),
+          zuhrModified: (evt.zuhrIqamaModified && hoursSince(evt.zuhrIqamaModified.toDate()) < 24),
+          asrModified: (evt.asrIqamaModified && hoursSince(evt.asrIqamaModified.toDate()) < 24),
+          maghribModified: (evt.maghribIqamaModified && hoursSince(evt.maghribIqamaModified.toDate()) < 24),
+          ishaModified: (evt.ishaIqamaModified && hoursSince(evt.ishaIqamaModified.toDate()) < 24),
+          juma1Modified: (evt.juma1Modified && hoursSince(evt.juma1Modified.toDate()) < 24),
+          juma2Modified: (evt.juma2Modified && hoursSince(evt.juma2Modified.toDate()) < 24),
+          juma3Modified: (evt.juma3Modified && hoursSince(evt.juma3Modified.toDate()) < 24),
+          updatedLabel: timeSince(evt.crawlTime.toDate())
+        }, evt)
+        events.push(merged)
+      }
+
+      // sort by distance
+      events.sort((a, b) => { return a.distance - b.distance })
+
+      vApp.message = 'Prayer times for ' + locationDescription
+      vApp.messageClass = 'text-success'
+      vApp.events = events
+    })
+    .catch((err) => {
+      vApp.message = err
+      vApp.messageClass = 'text-error'
+    })
 }
 
 function hoursSince (date) {

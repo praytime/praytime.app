@@ -13,16 +13,15 @@
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     -->
 
-    <!-- Firebase App is always required and must be first -->
-    <!-- script src="https://www.gstatic.com/firebasejs/5.2.0/firebase-app.js"></script-->
-    <script src="/__/firebase/5.3.0/firebase-app.js"></script>
-
-    <!-- Add additional services that you want to use -->
-    <!--script src="https://www.gstatic.com/firebasejs/5.2.0/firebase-firestore.js"></script-->
-    <script src="/__/firebase/5.3.0/firebase-firestore.js"></script>
+    <script src="/__/firebase/5.3.1/firebase-app.js"></script>
+    <script src="/__/firebase/5.3.1/firebase-firestore.js"></script>
     <script src="/__/firebase/init.js"></script>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-GheSc0eKtS4paXu3SjJDsPGxA5WReRk&libraries=geometry,places"></script>
+
+    <style>
+      [v-cloak] { display: none; }
+    </style>
 
     <title>praytime | masjid iqamah times</title>
   </head>
@@ -32,13 +31,18 @@
         <small class="text-muted">masjid iqamah times</small>
       </h1>
       <p>praytime crawls the web for masjid iqamah times and makes them searchable by location.</p>
-      <p>praytime is an <a href="https://github.com/praytime/praytime">open source</a> project that is open to contributions. Anybody can add new masaajid or modify existing crawlers.</p>
-      <p>Masaajid are mostly from the Chicagoland area currently. <a href="https://gitreports.com/issue/praytime/praytime?issue_title=New+Masjid+Request">Open a ticket to have a new masjid added.</a></p>
+      <p>praytime is an <a href="https://github.com/praytime/praytime">open source</a> project that is open to contributions. Anybody can add new masaajid or modify existing crawlers. <a href="https://gitreports.com/issue/praytime/praytime?issue_title=New+Masjid+Request">Open a ticket to have a new masjid added.</a></p>
       <p>Enter your location (address or city) in the box below to find iqamah times near you.</p>
       <div id="locationField">
-        <input id="autocomplete" placeholder="Enter a location" type="text" />
+
+        <a class="btn btn-primary btn-sm" v-bind:class="{ disabled: inputDisabled }" href="#" role="button" onclick="getCurrentPosition();return false;" >Use current location</a>
+        OR
+        <input id="autocomplete" placeholder="Enter a location" type="text" :disabled="inputDisabled"/>
+
       </div>
-      <div v-if="message" v-bind:class="messageClass">{{ message }}</div>
+
+      <div v-cloak v-bind:class="messageClass">{{ message }}</div>
+
       <template v-for="event in events">
         <div class="shadow-lg card mb-2">
           <div class="card-body">
