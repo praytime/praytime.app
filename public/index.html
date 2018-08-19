@@ -83,7 +83,7 @@
                 <td>{{ event.juma3 }}</td>
               </tr>
             </table>
-            <p v-if="!(event.fajrIqama && event.juma1)">Check website for prayer times.</p>
+            <p v-if="!(event.fajrIqama || event.juma1)">Check website for prayer times.</p>
             <p v-if="event.diffTz" class="text-warning">Note: This masjid may be in a a different time zone</p>
             <small v-bind:class="{ 'text-danger': event.stale }">
               last updated {{ event.updatedLabel }} ago<br>
