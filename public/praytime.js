@@ -117,7 +117,8 @@ function getPrayerTimesForLocation (locationDescription, location) {
           juma1Modified: (evt.juma1Modified && hoursSince(evt.juma1Modified.toDate()) < 24),
           juma2Modified: (evt.juma2Modified && hoursSince(evt.juma2Modified.toDate()) < 24),
           juma3Modified: (evt.juma3Modified && hoursSince(evt.juma3Modified.toDate()) < 24),
-          updatedLabel: timeSince(evt.crawlTime.toDate())
+          updatedLabel: timeSince(evt.crawlTime.toDate()),
+          stale: (hoursSince(evt.crawlTime.toDate()) > 12)
         }, evt)
         events.push(merged)
       }
