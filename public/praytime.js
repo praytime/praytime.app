@@ -22,8 +22,11 @@ const url = new URL(window.location.href)
 // }
 
 let searchRadiusMiles = 50
-if (!window.isNaN(Number(url.searchParams.get('r')))) {
-  searchRadiusMiles = Number(url.searchParams.get('r'))
+if (url.searchParams.has('r')) {
+  const p = Number(url.searchParams.get('r'))
+  if (!window.isNaN(p)) {
+    searchRadiusMiles = p
+  }
 }
 const searchRadiusMeters = searchRadiusMiles * 1609.344
 
