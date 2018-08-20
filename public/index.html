@@ -1,49 +1,61 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
-    <!--
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+    integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+    crossorigin="anonymous">
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+  <!--
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     -->
 
-    <script src="/__/firebase/5.3.1/firebase-app.js"></script>
-    <script src="/__/firebase/5.3.1/firebase-firestore.js"></script>
-    <script src="/__/firebase/init.js"></script>
+  <script src="/__/firebase/5.3.1/firebase-app.js"></script>
+  <script src="/__/firebase/5.3.1/firebase-firestore.js"></script>
+  <script src="/__/firebase/init.js"></script>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-GheSc0eKtS4paXu3SjJDsPGxA5WReRk&libraries=geometry,places"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-GheSc0eKtS4paXu3SjJDsPGxA5WReRk&libraries=geometry,places"></script>
 
-    <style>
-      [v-cloak] { display: none; }
-    </style>
+  <style>
+    [v-cloak] {
+      display: none;
+    }
 
-    <title>praytime | masjid iqamah times</title>
-  </head>
-  <body>
-    <div id="app" class="container">
-      <h1>praytime
-        <small class="text-muted">masjid iqamah times</small>
-      </h1>
-      <p>praytime crawls the web for masjid iqamah times and makes them searchable by location.</p>
-      <p>praytime is an <a href="https://github.com/praytime/praytime">open source</a> project that is open to contributions. Anybody can add new masaajid or modify existing crawlers. <a href="https://gitreports.com/issue/praytime/praytime?issue_title=New+Masjid+Request">Open a ticket to have a new masjid added.</a></p>
-      <p>Enter your location (address or city) in the box below to find iqamah times near you.</p>
-      <div id="locationField">
+  </style>
 
-        <a class="btn btn-primary btn-sm" v-bind:class="{ disabled: inputDisabled }" href="#" role="button" onclick="getCurrentPosition();return false;" >Use current location</a>
-        OR
-        <input id="autocomplete" placeholder="Enter a location" type="text" :disabled="inputDisabled"/>
+  <title>praytime | masjid iqamah times</title>
+</head>
 
-      </div>
+<body>
+  <div id="app" class="container">
+    <h1>praytime
+      <small class="text-muted">masjid iqamah times</small>
+    </h1>
+    <p>praytime crawls the web for masjid iqamah times and makes them searchable by
+      location.
+    </p>
+    <p>praytime is an <a href="https://github.com/praytime/praytime">open source</a>      project that is open to contributions. Anybody can add new masaajid or modify
+      existing crawlers. <a href="https://gitreports.com/issue/praytime/praytime?issue_title=New+Masjid+Request">Open a ticket to have a new masjid added.</a></p>
+    <p>Enter your location (address or city) in the box below to find iqamah times
+      near you.</p>
+    <div id="locationField">
 
-      <div v-cloak v-bind:class="messageClass">{{ message }}</div>
+      <a class="btn btn-primary btn-sm" v-bind:class="{ disabled: inputDisabled }" href="#"
+        role="button" onclick="getCurrentPosition();return false;">Use current location</a>      OR
+      <input id="autocomplete" placeholder="Enter a location" type="text" :disabled="inputDisabled"
+      />
 
-      <template v-for="event in events">
+    </div>
+
+    <div v-cloak v-bind:class="messageClass">{{ message }}</div>
+
+    <template v-for="event in events">
         <div class="shadow-lg card mb-2">
           <div class="card-body">
             <h5 class="card-title"><a target="_blank" :href="event.url">{{ event.name }}</a></h5>
@@ -92,12 +104,19 @@
           </div>
         </div>
       </template>
-    </div>
+  </div>
 
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
-    <!-- praytime -->
-    <script src="praytime.js"></script>
-  </body>
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+    integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+    integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+    crossorigin="anonymous"></script>
+  <!-- praytime -->
+  <script src="praytime.js"></script>
+</body>
+
 </html>
+
