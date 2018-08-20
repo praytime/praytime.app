@@ -13,8 +13,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
   <!--
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    -->
+      <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+      -->
 
   <script src="/__/firebase/5.3.1/firebase-app.js"></script>
   <script src="/__/firebase/5.3.1/firebase-firestore.js"></script>
@@ -40,8 +40,19 @@
     <p>praytime crawls the web for masjid iqamah times and makes them searchable by
       location.
     </p>
-    <p>praytime is an <a href="https://github.com/praytime/praytime">open source</a>      project that is open to contributions. Anybody can add new masaajid or modify
-      existing crawlers. <a href="https://gitreports.com/issue/praytime/praytime?issue_title=New+Masjid+Request">Open a ticket to have a new masjid added.</a></p>
+    <p>Extensive listings are available for the following metro areas:</p>
+    <ul>
+      <li>Chicago, IL</li>
+      <li>Washington, DC</li>
+    </ul>
+    <p>These cities are incubating:</p>
+    <ul>
+      <li>San Francisco, CA</li>
+      <li>Dallas, TX</li>
+      <li>Seattle, WA</li>
+    </ul>
+    <p><a href="https://gitreports.com/issue/praytime/praytime?issue_title=New+Masjid+Request">Open a ticket to have a new masjid added.</a>      praytime is <a href="https://github.com/praytime/praytime">open source</a>;
+      pull requests welcome.</p>
     <p>Enter your location (address or city) in the box below to find iqamah times
       near you.</p>
     <div id="locationField">
@@ -56,54 +67,54 @@
     <div v-cloak v-bind:class="messageClass">{{ message }}</div>
 
     <template v-for="event in events">
-        <div class="shadow-lg card mb-2">
-          <div class="card-body">
-            <h5 class="card-title"><a target="_blank" :href="event.url">{{ event.name }}</a></h5>
-            <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
-            <p><a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">{{ event.distLabel }} mi</a></p>
-            <table class="table">
-              <tr v-if="event.fajrIqama" v-bind:class="{ 'text-info': event.fajrModified }">
-                <td class="w-25">Fajr</td>
-                <td>{{ event.fajrIqama }}</td>
-              </tr>
-              <tr v-if="event.zuhrIqama" v-bind:class="{ 'text-info': event.zuhrModified }">
-                <td class="w-25">Zuhr</td>
-                <td>{{ event.zuhrIqama }}</td>
-              </tr>
-              <tr v-if="event.asrIqama" v-bind:class="{ 'text-info': event.asrModified }">
-                <td class="w-25">Asr</td>
-                <td>{{ event.asrIqama }}</td>
-              </tr>
-              <tr v-if="event.maghribIqama" v-bind:class="{ 'text-info': event.maghribModified }">
-                <td class="w-25">Maghrib</td>
-                <td>{{ event.maghribIqama }}</td>
-              </tr>
-              <tr v-if="event.ishaIqama" v-bind:class="{ 'text-info': event.ishaModified }">
-                <td class="w-25">Isha</td>
-                <td>{{ event.ishaIqama }}</td>
-              </tr>
-              <tr v-if="event.juma1" v-bind:class="{ 'text-info': event.juma1Modified }">
-                <td class="w-25">Juma</td>
-                <td>{{ event.juma1 }}</td>
-              </tr>
-              <tr v-if="event.juma2" v-bind:class="{ 'text-info': event.juma2Modified }">
-                <td class="w-25">Juma</td>
-                <td>{{ event.juma2 }}</td>
-              </tr>
-              <tr v-if="event.juma3" v-bind:class="{ 'text-info': event.juma3Modified }">
-                <td class="w-25">Juma</td>
-                <td>{{ event.juma3 }}</td>
-              </tr>
-            </table>
-            <p v-if="!(event.fajrIqama || event.juma1)">Check website for prayer times.</p>
-            <p v-if="event.diffTz" class="text-warning">Note: This masjid may be in a a different time zone</p>
-            <small v-bind:class="{ 'text-danger': event.stale }">
-              last updated {{ event.updatedLabel }} ago<br>
-              <a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report an error</a>
-            </small>
-          </div>
+      <div class="shadow-lg card mb-2">
+        <div class="card-body">
+          <h5 class="card-title"><a target="_blank" :href="event.url">{{ event.name }}</a></h5>
+          <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
+          <p><a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">{{ event.distLabel }} mi</a></p>
+          <table class="table">
+            <tr v-if="event.fajrIqama" v-bind:class="{ 'text-info': event.fajrModified }">
+              <td class="w-25">Fajr</td>
+              <td>{{ event.fajrIqama }}</td>
+            </tr>
+            <tr v-if="event.zuhrIqama" v-bind:class="{ 'text-info': event.zuhrModified }">
+              <td class="w-25">Zuhr</td>
+              <td>{{ event.zuhrIqama }}</td>
+            </tr>
+            <tr v-if="event.asrIqama" v-bind:class="{ 'text-info': event.asrModified }">
+              <td class="w-25">Asr</td>
+              <td>{{ event.asrIqama }}</td>
+            </tr>
+            <tr v-if="event.maghribIqama" v-bind:class="{ 'text-info': event.maghribModified }">
+              <td class="w-25">Maghrib</td>
+              <td>{{ event.maghribIqama }}</td>
+            </tr>
+            <tr v-if="event.ishaIqama" v-bind:class="{ 'text-info': event.ishaModified }">
+              <td class="w-25">Isha</td>
+              <td>{{ event.ishaIqama }}</td>
+            </tr>
+            <tr v-if="event.juma1" v-bind:class="{ 'text-info': event.juma1Modified }">
+              <td class="w-25">Juma</td>
+              <td>{{ event.juma1 }}</td>
+            </tr>
+            <tr v-if="event.juma2" v-bind:class="{ 'text-info': event.juma2Modified }">
+              <td class="w-25">Juma</td>
+              <td>{{ event.juma2 }}</td>
+            </tr>
+            <tr v-if="event.juma3" v-bind:class="{ 'text-info': event.juma3Modified }">
+              <td class="w-25">Juma</td>
+              <td>{{ event.juma3 }}</td>
+            </tr>
+          </table>
+          <p v-if="!(event.fajrIqama || event.juma1)">Check website for prayer times.</p>
+          <p v-if="event.diffTz" class="text-warning">Note: This masjid may be in a a different time zone</p>
+          <small v-bind:class="{ 'text-danger': event.stale }">
+            last updated {{ event.updatedLabel }} ago<br>
+            <a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report an error</a>
+          </small>
         </div>
-      </template>
+      </div>
+    </template>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"

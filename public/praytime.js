@@ -16,6 +16,17 @@ const vApp = new Vue({
 
 const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone
 
+const url = new URL(window.location.href)
+// for (const p of url.searchParams.entries()) {
+//   console.log(p)
+// }
+
+let searchRadiusMiles = 50
+if (!window.isNaN(Number(url.searchParams.get('r')))) {
+  searchRadiusMiles = Number(url.searchParams.get('r'))
+}
+const searchRadiusMeters = searchRadiusMiles * 1609.344
+
 const db = firebase.firestore()
 db.settings({ timestampsInSnapshots: true })
 
@@ -27,16 +38,20 @@ const autocomplete = new google.maps.places.Autocomplete(document.getElementById
 autocomplete.addListener('place_changed', gmapsAutocompletePlaceChangeListener)
 
 // If geolocation permission is granted, just load results for the current location automatically
-if (navigator.permissions && navigator.geolocation) {
-  navigator.permissions.query({name: 'geolocation'})
-    .then(function (result) {
-      if (result.state === 'granted') {
-        getCurrentPosition()
-      }
-    })
-    .catch(function (err) {
-      console.log(err)
-    })
+try {
+  if (!!navigator.permissions && !!navigator.geolocation) {
+    navigator.permissions.query({name: 'geolocation'})
+      .then(function (result) {
+        if (result.state === 'granted') {
+          getCurrentPosition()
+        }
+      })
+      .catch(function (err) {
+        console.log(err)
+      })
+  }
+} catch (err) {
+  console.log(err)
 }
 
 //
@@ -97,16 +112,17 @@ function getPrayerTimesForLocation (locationDescription, location) {
   vApp.messageClass = 'text-secondary'
 
   // TODO: add geo bounds to this query
+  // data set is small, so will filter in client for now
   db.collection('Events').get()
     .then((querySnapshotRef) => {
       const events = []
       for (const doc of querySnapshotRef.docs) {
         const evt = doc.data()
-        const geo = evt.geo
-        const distance = google.maps.geometry.spherical.computeDistanceBetween(location, new google.maps.LatLng(geo.latitude, geo.longitude))
-        const distLabel = (distance * 0.000621371192).toFixed(2)
+        const distanceMeters = google.maps.geometry.spherical.computeDistanceBetween(location, new google.maps.LatLng(evt.geo.latitude, evt.geo.longitude))
+        if (searchRadiusMeters && distanceMeters > searchRadiusMeters) { continue }
+        const distLabel = (distanceMeters * 0.000621371192).toFixed(2)
         const merged = Object.assign({
-          distance: distance,
+          distanceMeters: distanceMeters,
           distLabel: distLabel,
           diffTz: (userTz !== evt.timeZoneId),
           fajrModified: (evt.fajrIqamaModified && hoursSince(evt.fajrIqamaModified.toDate()) < 24),
@@ -123,16 +139,20 @@ function getPrayerTimesForLocation (locationDescription, location) {
         events.push(merged)
       }
 
-      // sort by distance
-      events.sort((a, b) => { return a.distance - b.distance })
-
-      vApp.message = 'Prayer times for ' + locationDescription
-      vApp.messageClass = 'text-success'
-      vApp.events = events
+      if (events.length) {
+        // sort by distance
+        events.sort((a, b) => { return a.distanceMeters - b.distanceMeters })
+        vApp.message = 'Prayer times within ' + searchRadiusMiles + ' miles of ' + locationDescription
+        vApp.messageClass = 'text-success'
+        vApp.events = events
+      } else {
+        vApp.message = 'No prayer times found within ' + searchRadiusMiles + ' miles of ' + locationDescription
+        vApp.messageClass = 'text-info'
+      }
     })
     .catch((err) => {
       vApp.message = err
-      vApp.messageClass = 'text-error'
+      vApp.messageClass = 'text-danger'
     })
 }
 
