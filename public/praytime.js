@@ -1,8 +1,31 @@
 /* global Vue, firebase, google */
 
 //
-// GLOBALS
+// GLOBALS / MAIN
 //
+
+// setup service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(function () {
+      console.log('Service Worker Registered')
+    })
+}
+
+// // TODO
+// // capture add to homescreen event
+// let deferredPrompt
+//
+// window.addEventListener('beforeinstallprompt', (e) => {
+//   // Prevent Chrome 67 and earlier from automatically showing the prompt
+//   e.preventDefault()
+//   // Stash the event so it can be triggered later.
+//   deferredPrompt = e
+// })
+//
+// window.addEventListener('appinstalled', (evt) => {
+//   console.log('added to home screen successfully')
+// })
 
 const vApp = new Vue({
   el: '#app',
@@ -32,6 +55,22 @@ const searchRadiusMeters = searchRadiusMiles * 1609.344
 
 const db = firebase.firestore()
 db.settings({ timestampsInSnapshots: true })
+// // TODO
+// const messaging = firebase.messaging()
+//
+// messaging.usePublicVapidKey('BEgZlt2y5qeI4Ca3AV4s8eqyWIxMu4tYgN1ywYt1crenySm-hynwa72cEX1HMcKkfC0To9aNOPBcMv21MChqvmU')
+//
+// messaging.requestPermission()
+//   .then(function () {
+//     console.log('Notification permission granted.')
+//     return messaging.getToken()
+//   })
+//   .then(function (token) {
+//     console.log(token)
+//   })
+//   .catch(function (err) {
+//     console.log('Unable to get permission to notify.', err)
+//   })
 
 const geocoder = new google.maps.Geocoder()
 const autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'), {
