@@ -55,6 +55,22 @@ const searchRadiusMeters = searchRadiusMiles * 1609.344
 
 const db = firebase.firestore()
 db.settings({ timestampsInSnapshots: true })
+
+const auth = firebase.auth()
+auth.signInAnonymously().catch(function (error) {
+  // Handle Errors here.
+  console.log('firebase anon sign in error.code:' + error.code + ' error.message: ' + error.message)
+})
+auth.onAuthStateChanged(function (user) {
+  if (user) {
+    // User is signed in.
+    console.log('firebase user signed isAnonymous: ' + user.isAnonymous + ' user.uid: ' + user.uid)
+    // ...
+  } else {
+    console.log('firebase user signed out')
+  }
+})
+
 // // TODO
 // const messaging = firebase.messaging()
 //
