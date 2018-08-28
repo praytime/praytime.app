@@ -84,35 +84,35 @@
           <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
           <p><a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">{{ event.distLabel }} mi</a></p>
           <table class="table">
-            <tr v-if="event.fajrIqama" v-bind:class="{ 'text-info': event.fajrModified }">
+            <tr v-if="event.fajrIqama" v-bind:class="{ 'text-info': event.fajrIsModified }">
               <td class="w-25">Fajr</td>
               <td>{{ event.fajrIqama }}</td>
             </tr>
-            <tr v-if="event.zuhrIqama" v-bind:class="{ 'text-info': event.zuhrModified }">
+            <tr v-if="event.zuhrIqama" v-bind:class="{ 'text-info': event.zuhrIsModified }">
               <td class="w-25">Zuhr</td>
               <td>{{ event.zuhrIqama }}</td>
             </tr>
-            <tr v-if="event.asrIqama" v-bind:class="{ 'text-info': event.asrModified }">
+            <tr v-if="event.asrIqama" v-bind:class="{ 'text-info': event.asrIsModified }">
               <td class="w-25">Asr</td>
               <td>{{ event.asrIqama }}</td>
             </tr>
-            <tr v-if="event.maghribIqama" v-bind:class="{ 'text-info': event.maghribModified }">
+            <tr v-if="event.maghribIqama" v-bind:class="{ 'text-info': event.maghribIsModified }">
               <td class="w-25">Maghrib</td>
               <td>{{ event.maghribIqama }}</td>
             </tr>
-            <tr v-if="event.ishaIqama" v-bind:class="{ 'text-info': event.ishaModified }">
+            <tr v-if="event.ishaIqama" v-bind:class="{ 'text-info': event.ishaIsModified }">
               <td class="w-25">Isha</td>
               <td>{{ event.ishaIqama }}</td>
             </tr>
-            <tr v-if="event.juma1" v-bind:class="{ 'text-info': event.juma1Modified }">
+            <tr v-if="event.juma1" v-bind:class="{ 'text-info': event.juma1IsModified }">
               <td class="w-25">Juma</td>
               <td>{{ event.juma1 }}</td>
             </tr>
-            <tr v-if="event.juma2" v-bind:class="{ 'text-info': event.juma2Modified }">
+            <tr v-if="event.juma2" v-bind:class="{ 'text-info': event.juma2IsModified }">
               <td class="w-25">Juma</td>
               <td>{{ event.juma2 }}</td>
             </tr>
-            <tr v-if="event.juma3" v-bind:class="{ 'text-info': event.juma3Modified }">
+            <tr v-if="event.juma3" v-bind:class="{ 'text-info': event.juma3IsModified }">
               <td class="w-25">Juma</td>
               <td>{{ event.juma3 }}</td>
             </tr>
