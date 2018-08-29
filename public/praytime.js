@@ -235,10 +235,10 @@ function timeSince (date) {
 
   for (const unit of units) {
     const interval = Math.floor(secondsSince / unit.v)
-    if (interval > 1) {
+    if (interval > 0) {
       returnValue.push(interval + ' ' + unit.k)
+      secondsSince -= interval * unit.v
     }
-    secondsSince -= interval * unit.v
   }
 
   if (Object.keys(returnValue).length > 0) {
