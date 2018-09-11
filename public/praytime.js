@@ -1,4 +1,4 @@
-/* global Vue, firebase, google */
+/* global Vue, firebase, google, SunCalc */
 
 //
 // GLOBALS / MAIN
@@ -38,6 +38,7 @@ const vApp = new Vue({
 })
 
 const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+const now = new Date()
 
 const url = new URL(window.location.href)
 // for (const p of url.searchParams.entries()) {
@@ -82,7 +83,7 @@ autocomplete.addListener('place_changed', gmapsAutocompletePlaceChangeListener)
 // If geolocation permission is granted, just load results for the current location automatically
 try {
   if (!!navigator.permissions && !!navigator.geolocation) {
-    navigator.permissions.query({name: 'geolocation'})
+    navigator.permissions.query({ name: 'geolocation' })
       .then(function (result) {
         if (result.state === 'granted') {
           getCurrentPosition()
@@ -161,12 +162,17 @@ function getPrayerTimesForLocation (locationDescription, location) {
       for (const doc of querySnapshotRef.docs) {
         const evt = doc.data()
         const distanceMeters = google.maps.geometry.spherical.computeDistanceBetween(location, new google.maps.LatLng(evt.geo.latitude, evt.geo.longitude))
+
+        const times = SunCalc.getTimes(now, evt.geo.latitude, evt.geo.longitude)
+
         if (searchRadiusMeters && distanceMeters > searchRadiusMeters) { continue }
         const distLabel = (distanceMeters * 0.000621371192).toFixed(2)
         const merged = Object.assign({
           distanceMeters: distanceMeters,
           distLabel: distLabel,
           diffTz: (userTz !== evt.timeZoneId),
+          sunrise: hourMinuteString(times.sunrise, evt.timeZoneId),
+          sunset: hourMinuteString(times.sunset, evt.timeZoneId),
           fajrIsModified: (evt.fajrIqamaModified && hoursSince(evt.fajrIqamaModified.toDate()) < 24),
           zuhrIsModified: (evt.zuhrIqamaModified && hoursSince(evt.zuhrIqamaModified.toDate()) < 24),
           asrIsModified: (evt.asrIqamaModified && hoursSince(evt.asrIqamaModified.toDate()) < 24),
@@ -196,6 +202,18 @@ function getPrayerTimesForLocation (locationDescription, location) {
       vApp.message = err
       vApp.messageClass = 'text-danger'
     })
+}
+
+function hourMinuteString (date, tz) {
+  try {
+    return date.toLocaleTimeString([], {
+      timeZone: tz,
+      hour: 'numeric',
+      minute: 'numeric'
+    })
+  } catch (err) {
+    console.log(err)
+  }
 }
 
 function hoursSince (date) {
