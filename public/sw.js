@@ -6,7 +6,8 @@ const cacheName = 'praytime-cache'
 const filesToCache = [
   '/',
   '/index.html',
-  '/praytime.js'
+  '/praytime.js',
+  '/suncalc.js'
 ]
 
 self.addEventListener('install', function (e) {
