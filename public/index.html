@@ -58,92 +58,83 @@
     <h1>praytime
       <small class="text-muted">masjid iqamah times</small>
     </h1>
-    <p>praytime crawls the web for masjid iqamah times and makes them searchable by
-      location.
-    </p>
-    <p>Extensive listings are available for the following metro areas:</p>
-    <ul>
-      <li>Chicago, IL</li>
-      <li>Seattle, WA</li>
-      <li>Washington, DC</li>
-    </ul>
-    <p>These cities are incubating:</p>
-    <ul>
-      <li>Dallas, TX</li>
-      <li>San Francisco, CA</li>
-    </ul>
-    <p><a href="https://gitreports.com/issue/praytime/praytime?issue_title=New+Masjid+Request">Open a ticket to have a new masjid added.</a>      praytime is <a href="https://github.com/praytime/praytime">open source</a>;
-      pull requests welcome.</p>
-    <p>Enter your location (address or city) in the box below to find iqamah times
-      near you.</p>
     <div id="locationField">
-
-      <a class="btn btn-primary btn-sm" v-bind:class="{ disabled: inputDisabled }" href="#"
-        role="button" onclick="getCurrentPosition();return false;">Use current location</a>      OR
-      <input id="autocomplete" placeholder="Enter a location" type="text" :disabled="inputDisabled"
-      />
+      <form>
+        <div class="row">
+          <div class="col">
+            <input type="text" class="form-control" id="autocomplete" placeholder="Enter a location" :disabled="inputDisabled"/>
+          </div>
+          <div class="col">
+            <button class="form-control btn btn-primary btn-sm" :disabled="inputDisabled" onclick="getCurrentPosition();return false;">Current location</button>
+            <!--<a class="form-control btn btn-primary btn-sm" v-bind:class="{ disabled: inputDisabled }" href="#" role="button" onclick="getCurrentPosition();return false;">Current location</a>-->
+          </div>
+        </div>
+      </form>
 
     </div>
 
     <div v-cloak v-bind:class="messageClass">{{ message }}</div>
 
-    <template v-for="event in events">
-      <div class="shadow-lg card mb-2">
-        <div class="card-body">
-          <h5 class="card-title"><a target="_blank" :href="event.url">{{ event.name }}</a></h5>
-          <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
-          <p><a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">{{ event.distLabel }} mi</a></p>
-          <p>
+    <div class="card-columns">
+      <template v-for="event in events">
+        <div class="shadow-lg card mb-2">
+          <div class="card-body">
+            <h5 class="card-title"><a target="_blank" :href="event.url">{{ event.name }}</a></h5>
+            <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
+            <p class="text-center"><a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">{{ event.distLabel }} mi</a> |
             ☀️▲ {{ event.sunrise }} | ☀️▼ {{ event.sunset }}
-          </p>
-          <table class="table">
-            <tr v-if="event.fajrIqama" v-bind:class="{ 'text-info': event.fajrIsModified }">
-              <td class="w-25">Fajr</td>
-              <td>{{ event.fajrIqama }}</td>
-            </tr>
-            <tr v-if="event.zuhrIqama" v-bind:class="{ 'text-info': event.zuhrIsModified }">
-              <td class="w-25">Zuhr</td>
-              <td>{{ event.zuhrIqama }}</td>
-            </tr>
-            <tr v-if="event.asrIqama" v-bind:class="{ 'text-info': event.asrIsModified }">
-              <td class="w-25">Asr</td>
-              <td>{{ event.asrIqama }}</td>
-            </tr>
-            <tr v-if="event.maghribIqama" v-bind:class="{ 'text-info': event.maghribIsModified }">
-              <td class="w-25">Maghrib</td>
-              <td>{{ event.maghribIqama }}</td>
-            </tr>
-            <tr v-if="event.ishaIqama" v-bind:class="{ 'text-info': event.ishaIsModified }">
-              <td class="w-25">Isha</td>
-              <td>{{ event.ishaIqama }}</td>
-            </tr>
-            <tr v-if="event.juma1" v-bind:class="{ 'text-info': event.juma1IsModified }">
-              <td class="w-25">Juma</td>
-              <td>{{ event.juma1 }}</td>
-            </tr>
-            <tr v-if="event.juma2" v-bind:class="{ 'text-info': event.juma2IsModified }">
-              <td class="w-25">Juma</td>
-              <td>{{ event.juma2 }}</td>
-            </tr>
-            <tr v-if="event.juma3" v-bind:class="{ 'text-info': event.juma3IsModified }">
-              <td class="w-25">Juma</td>
-              <td>{{ event.juma3 }}</td>
-            </tr>
-          </table>
-          <p v-if="!(event.fajrIqama || event.juma1)">Check website for prayer times.</p>
-          <p v-if="event.diffTz" class="text-warning">Note: This masjid may be in a a different time zone</p>
-          <small v-bind:class="{ 'text-danger': event.stale }">
-            last updated {{ event.updatedLabel }} ago<br>
-            <a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report an error</a>
-          </small>
+            </p>
+            <table class="table table-sm">
+              <tr v-if="event.fajrIqama" v-bind:class="{ 'text-info': event.fajrIsModified }">
+                <td class="text-left" >Fajr</td>
+                <td class="text-right">{{ event.fajrIqama }}</td>
+              </tr>
+              <tr v-if="event.zuhrIqama" v-bind:class="{ 'text-info': event.zuhrIsModified }">
+                <td class="text-left"  >Zuhr</td>
+                <td class="text-right">{{ event.zuhrIqama }}</td>
+              </tr>
+              <tr v-if="event.asrIqama" v-bind:class="{ 'text-info': event.asrIsModified }">
+                <td class="text-left"  >Asr</td>
+                <td class="text-right">{{ event.asrIqama }}</td>
+              </tr>
+              <tr v-if="event.maghribIqama" v-bind:class="{ 'text-info': event.maghribIsModified }">
+                <td class="text-left"  >Maghrib</td>
+                <td class="text-right">{{ event.maghribIqama }}</td>
+              </tr>
+              <tr v-if="event.ishaIqama" v-bind:class="{ 'text-info': event.ishaIsModified }">
+                <td class="text-left"  >Isha</td>
+                <td class="text-right">{{ event.ishaIqama }}</td>
+              </tr>
+              <tr v-if="event.juma1" v-bind:class="{ 'text-info': event.juma1IsModified }">
+                <td class="text-left"  >Juma</td>
+                <td class="text-right">{{ event.juma1 }}</td>
+              </tr>
+              <tr v-if="event.juma2" v-bind:class="{ 'text-info': event.juma2IsModified }">
+                <td class="text-left"  >Juma</td>
+                <td class="text-right">{{ event.juma2 }}</td>
+              </tr>
+              <tr v-if="event.juma3" v-bind:class="{ 'text-info': event.juma3IsModified }">
+                <td class="text-left"  >Juma</td>
+                <td class="text-right">{{ event.juma3 }}</td>
+              </tr>
+            </table>
+            <p v-if="!(event.fajrIqama || event.juma1)">Check website for prayer times.</p>
+            <p v-if="event.diffTz" class="text-warning">Note: This masjid may be in a a different time zone</p>
+            <small v-bind:class="{ 'text-danger': event.stale }">
+              last updated {{ event.updatedLabel }} ago<br>
+              <a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report an error</a>
+            </small>
+          </div>
         </div>
-      </div>
-    </template>
-    <div class="small mt-5">
-      <p>
-        <a href="https://termsfeed.com/disclaimer/53d0df046145b8b97c84f1e5b8f23e2c">disclaimer</a><br>
-        Icon made by Freepik from www.flaticon.com
-      </p>
+      </template>
+    </div>
+    <div class="mt-5">
+      <p><a href="https://gitreports.com/issue/praytime/praytime?issue_title=New+Masjid+Request">Open a ticket to have a new masjid added.</a></p>
+      <p>praytime is <a href="https://github.com/praytime/praytime">open source</a>; pull requests welcome.</p>
+    </div>
+    <div class="small">
+      <p><a href="https://termsfeed.com/disclaimer/53d0df046145b8b97c84f1e5b8f23e2c">disclaimer</a></p>
+      <p>Icon made by Freepik from www.flaticon.com</p>
     </div>
   </div>
 
