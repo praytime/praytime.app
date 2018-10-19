@@ -30,6 +30,10 @@ if ('serviceWorker' in navigator) {
 const vApp = new Vue({
   el: '#app',
   data: {
+    notificationPermissionGranted: false,
+    signedIn: false,
+    user: null,
+    userDocRef: null,
     inputDisabled: false,
     message: '',
     messageClass: 'text-secondary',
@@ -56,22 +60,46 @@ const searchRadiusMeters = searchRadiusMiles * 1609.344
 
 const db = firebase.firestore()
 db.settings({ timestampsInSnapshots: true })
-// // TODO
-// const messaging = firebase.messaging()
-//
-// messaging.usePublicVapidKey('BEgZlt2y5qeI4Ca3AV4s8eqyWIxMu4tYgN1ywYt1crenySm-hynwa72cEX1HMcKkfC0To9aNOPBcMv21MChqvmU')
-//
-// messaging.requestPermission()
-//   .then(function () {
-//     console.log('Notification permission granted.')
-//     return messaging.getToken()
-//   })
-//   .then(function (token) {
-//     console.log(token)
-//   })
-//   .catch(function (err) {
-//     console.log('Unable to get permission to notify.', err)
-//   })
+
+let messaging = null
+
+firebase.auth().signInAnonymously().catch(function (err) {
+  console.log(err)
+})
+
+firebase.auth().onAuthStateChanged(function (u) {
+  if (u) {
+    console.log('user signed in: ' + u)
+
+    vApp.userDocRef = db.collection('Users').doc(u.uid)
+    vApp.userDocRef.get().then(function (user) {
+      if (user.exists) {
+        vApp.user = user.data()
+        console.log('User data:', vApp.user)
+      } else {
+        console.log('New user')
+        const newUser = {
+          id: u.uid
+        }
+        vApp.userDocRef.set(newUser).then(function () {
+          console.log('New user saved')
+          vApp.user = newUser
+        }).catch(function (error) {
+          console.log('Error saving document:', error)
+        })
+      }
+    }).catch(function (error) {
+      console.log('Error getting document:', error)
+    })
+
+    vApp.signedIn = true
+    setupMessaging()
+  } else {
+    console.log('user signed out')
+    vApp.user = null
+    vApp.signedIn = false
+  }
+})
 
 const geocoder = new google.maps.Geocoder()
 const autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'), {
@@ -100,6 +128,109 @@ try {
 //
 // FUNCTIONS
 //
+
+function setupMessaging () {
+  if (firebase.messaging.isSupported()) {
+    messaging = firebase.messaging()
+    messaging.usePublicVapidKey('BEgZlt2y5qeI4Ca3AV4s8eqyWIxMu4tYgN1ywYt1crenySm-hynwa72cEX1HMcKkfC0To9aNOPBcMv21MChqvmU')
+    // check if notification permission already granted:
+    try {
+      if ('permissions' in navigator) {
+        navigator.permissions.query({ name: 'notifications' })
+          .then(function (result) {
+            if (result.state === 'granted') {
+              vApp.notificationPermissionGranted = true
+              if (!isTokenSentToServer()) {
+                getMessagingToken()
+              }
+            } else {
+              askForNotificationPermission()
+            }
+          })
+          .catch(function (err) {
+            console.log(err)
+            askForNotificationPermission()
+          })
+      } else {
+      // TODO: check persistent storage?
+        askForNotificationPermission()
+      }
+    } catch (err) {
+      console.log(err)
+      // TODO: check persistent storage?
+      askForNotificationPermission()
+    }
+
+    messaging.onTokenRefresh(function () {
+      getMessagingToken()
+    })
+
+    // Handle incoming messages. Called when:
+    // // - a message is received while the app has focus
+    // // - the user clicks on an app notification created by a service worker
+    // //   `messaging.setBackgroundMessageHandler` handler.
+    messaging.onMessage(function (payload) {
+      console.log('Message received. ', payload)
+      window.alert(payload.data)
+    })
+  }
+}
+
+function getMessagingToken () {
+  messaging.getToken().then(function (refreshedToken) {
+    console.log('Token refreshed.')
+    setTokenSentToServer(false)
+    // Send Instance ID token to app server.
+    sendTokenToServer(refreshedToken)
+  }).catch(function (err) {
+    console.log('Unable to retrieve refreshed token ', err)
+  })
+}
+
+// Send the Instance ID token your application server, so that it can:
+// - send messages back to this app
+// - subscribe/unsubscribe the token from topics
+function sendTokenToServer (currentToken) {
+  if (!isTokenSentToServer()) {
+    console.log('Sending token to server...')
+    console.log(currentToken)
+
+    const userUpdate = vApp.user
+    if (!userUpdate.fcmTokens) {
+      console.log('no tokens')
+      userUpdate.fcmTokens = {}
+    }
+    userUpdate.fcmTokens[currentToken] = true
+
+    vApp.userDocRef.set(userUpdate).then(function () {
+      console.log('fcmToken written')
+      vApp.user = userUpdate
+      // Send the current token to your server.
+      setTokenSentToServer(true)
+    })
+  } else {
+    console.log('Token already sent to server so won\'t send it again ' +
+          'unless it changes')
+  }
+}
+
+// function readyForPush () {
+//   return vApp.signedIn && vApp.notificationPermissionGranted && isTokenSentToServer()
+// }
+
+function askForNotificationPermission () {
+  // TODO pop up asking for permission
+  console.log('asking for notification permission')
+  messaging.requestPermission()
+    .then(function () {
+      console.log('Notification permission granted.')
+      vApp.notificationPermissionGranted = true
+      getMessagingToken()
+    })
+    .catch(function (err) {
+      console.log('Unable to get permission to notify.', err)
+    })
+}
 
 // gmaps autocomplete handler
 function gmapsAutocompletePlaceChangeListener () {
@@ -264,4 +395,24 @@ function timeSince (date) {
   }
 
   return secondsSince + ' seconds'
+}
+
+function isTokenSentToServer () {
+  if (window.localStorage.getItem('sentToServer') === '1') {
+    vApp.sentToServer = '1'
+    return true
+  } else {
+    vApp.sentToServer = '0'
+    return false
+  }
+}
+
+function setTokenSentToServer (sent) {
+  if (sent) {
+    vApp.sentToServer = '1'
+    window.localStorage.setItem('sentToServer', '1')
+  } else {
+    vApp.sentToServer = '0'
+    window.localStorage.setItem('sentToServer', '0')
+  }
 }

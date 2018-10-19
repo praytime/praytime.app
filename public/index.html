@@ -34,11 +34,10 @@
       <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
       -->
 
-  <script src="/__/firebase/5.3.1/firebase-app.js"></script>
-  <script src="/__/firebase/5.3.1/firebase-firestore.js"></script>
-  <!--
-  <script src="/__/firebase/5.3.1/firebase-messaging.js"></script>
-  -->
+  <script src="/__/firebase/5.5.2/firebase-app.js"></script>
+  <script src="/__/firebase/5.5.2/firebase-auth.js"></script>
+  <script src="/__/firebase/5.5.2/firebase-firestore.js"></script>
+  <script src="/__/firebase/5.5.2/firebase-messaging.js"></script>
   <script src="/__/firebase/init.js"></script>
 
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-GheSc0eKtS4paXu3SjJDsPGxA5WReRk&libraries=geometry,places"></script>
@@ -120,6 +119,9 @@
             </table>
             <p v-if="!(event.fajrIqama || event.juma1)">Check website for prayer times.</p>
             <p v-if="event.diffTz" class="text-warning">Note: This masjid may be in a a different time zone</p>
+            <p>
+              <button type="button" class="btn btn-primary btn-sm">Small button</button>
+            </p>
             <small v-bind:class="{ 'text-danger': event.stale }">
               last updated {{ event.updatedLabel }} ago<br>
               <a :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)" class="card-link">Report an error</a>
