@@ -51,8 +51,9 @@ exports.createUser = functions.firestore
   .onCreate((snap, context) => {
     const newUser = snap.data()
     const tokens = Object.keys(newUser.fcmTokens)
+    const newTopics = Object.keys(newUser.topics)
     console.log('New user: ', newUser)
-    updateSubcription(newUser.id, tokens, null, newUser.topics)
+    updateSubcription(newUser.id, tokens, null, newTopics)
   })
 
 exports.updateUser = functions.firestore
@@ -61,9 +62,11 @@ exports.updateUser = functions.firestore
     const newUser = change.after.data()
     const oldUser = change.before.data()
     const tokens = Object.keys(newUser.fcmTokens)
+    const oldTopics = Object.keys(oldUser.topics)
+    const newTopics = Object.keys(newUser.topics)
     console.log(typeof newUser.fcmTokens)
     console.log('Modify user, old: ', oldUser, ' new: ', newUser)
-    updateSubcription(newUser.id, tokens, oldUser.topics, newUser.topics)
+    updateSubcription(newUser.id, tokens, oldTopics, newTopics)
   })
 
 exports.deleteUser = functions.firestore
@@ -71,6 +74,7 @@ exports.deleteUser = functions.firestore
   .onDelete((snap, context) => {
     const oldUser = snap.data()
     const tokens = Object.keys(oldUser.fcmTokens)
+    const oldTopics = Object.keys(oldUser.topics)
     console.log('Delete user: ', oldUser)
-    updateSubcription(oldUser.id, tokens, oldUser.topics, null)
+    updateSubcription(oldUser.id, tokens, oldTopics, null)
   })

@@ -8,7 +8,6 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'UA-125509748-1');
   </script>
 
@@ -29,10 +28,10 @@
     integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
     crossorigin="anonymous">
 
-  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
   <!--
-      <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-      -->
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
   <script src="/__/firebase/5.5.2/firebase-app.js"></script>
   <script src="/__/firebase/5.5.2/firebase-auth.js"></script>
@@ -53,6 +52,27 @@
 </head>
 
 <body>
+
+  <div class="modal" id="notificationPermissionRequestModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Enable push notifications?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Enable push notifications to get alerts when prayer times change at your selected masaajid.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal" id="enableNotificationButton">Enable</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="app" class="container">
     <h1>praytime
       <small class="text-muted">masjid iqamah times</small>
@@ -119,8 +139,9 @@
             </table>
             <p v-if="!(event.fajrIqama || event.juma1)">Check website for prayer times.</p>
             <p v-if="event.diffTz" class="text-warning">Note: This masjid may be in a a different time zone</p>
-            <p>
-              <button type="button" class="btn btn-primary btn-sm">Small button</button>
+            <p v-cloak v-if="messagingSupported && signedIn">
+              <input type="checkbox" id="checkbox" @change="fcmUpdate(event.fcmTopic)" v-model="topics[event.fcmTopic]">
+              <label for="checkbox">Notify me of time changes</label>
             </p>
             <small v-bind:class="{ 'text-danger': event.stale }">
               last updated {{ event.updatedLabel }} ago<br>

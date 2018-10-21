@@ -1,4 +1,4 @@
-/* global Vue, firebase, google, SunCalc */
+/* global Vue, firebase, google, SunCalc, $ */
 
 //
 // GLOBALS / MAIN
@@ -30,14 +30,45 @@ if ('serviceWorker' in navigator) {
 const vApp = new Vue({
   el: '#app',
   data: {
-    notificationPermissionGranted: false,
     signedIn: false,
+    messagingSupported: firebase.messaging.isSupported(),
+    notificationPermissionGranted: false,
+    fcmTokenRefreshed: false,
+    topics: {},
     user: null,
     userDocRef: null,
     inputDisabled: false,
     message: '',
     messageClass: 'text-secondary',
     events: []
+  },
+  methods: {
+    fcmUpdate: function (fcmTopic) {
+      console.log('change ' + fcmTopic, this.topics[fcmTopic])
+
+      if (!this.signedIn) {
+        console.log('user not signed in')
+        return
+      }
+
+      // sync topic list
+      for (const topic in this.topics) {
+        if (topic) {
+          this.user.topics[topic] = true
+        } else {
+          delete this.user.topics[topic]
+        }
+      }
+
+      if (!this.fcmTokenRefreshed) {
+        console.log('no fcm token yet')
+        return
+      }
+
+      this.userDocRef.set(this.user).then(function () {
+        console.log('topics saved')
+      })
+    }
   }
 })
 
@@ -69,31 +100,35 @@ firebase.auth().signInAnonymously().catch(function (err) {
 
 firebase.auth().onAuthStateChanged(function (u) {
   if (u) {
-    console.log('user signed in: ' + u)
-
+    console.log('user signed in:', u)
     vApp.userDocRef = db.collection('Users').doc(u.uid)
     vApp.userDocRef.get().then(function (user) {
       if (user.exists) {
         vApp.user = user.data()
+        for (const topic in vApp.user.topics) {
+          vApp.topics[topic] = true
+        }
         console.log('User data:', vApp.user)
+        console.log('topics:', vApp.topics)
       } else {
         console.log('New user')
-        const newUser = {
-          id: u.uid
+        vApp.user = {
+          id: u.uid,
+          fcmTokens: {},
+          topics: {}
         }
-        vApp.userDocRef.set(newUser).then(function () {
-          console.log('New user saved')
-          vApp.user = newUser
-        }).catch(function (error) {
-          console.log('Error saving document:', error)
-        })
+        // vApp.userDocRef.set(newUser).then(function () {
+        //   console.log('New user saved')
+        //   vApp.user = newUser
+        // }).catch(function (error) {
+        //   console.log('Error saving document:', error)
+        // })
       }
+      vApp.signedIn = true
+      setupMessaging()
     }).catch(function (error) {
       console.log('Error getting document:', error)
     })
-
-    vApp.signedIn = true
-    setupMessaging()
   } else {
     console.log('user signed out')
     vApp.user = null
@@ -130,9 +165,10 @@ try {
 //
 
 function setupMessaging () {
-  if (firebase.messaging.isSupported()) {
+  if (vApp.messagingSupported) {
     messaging = firebase.messaging()
     messaging.usePublicVapidKey('BEgZlt2y5qeI4Ca3AV4s8eqyWIxMu4tYgN1ywYt1crenySm-hynwa72cEX1HMcKkfC0To9aNOPBcMv21MChqvmU')
+
     // check if notification permission already granted:
     try {
       if ('permissions' in navigator) {
@@ -140,9 +176,9 @@ function setupMessaging () {
           .then(function (result) {
             if (result.state === 'granted') {
               vApp.notificationPermissionGranted = true
-              if (!isTokenSentToServer()) {
-                getMessagingToken()
-              }
+              // if (!isTokenSentToServer()) {
+              getMessagingToken()
+              // }
             } else {
               askForNotificationPermission()
             }
@@ -162,6 +198,7 @@ function setupMessaging () {
     }
 
     messaging.onTokenRefresh(function () {
+      console.log('getting refreshed token')
       getMessagingToken()
     })
 
@@ -177,59 +214,90 @@ function setupMessaging () {
 }
 
 function getMessagingToken () {
-  messaging.getToken().then(function (refreshedToken) {
-    console.log('Token refreshed.')
-    setTokenSentToServer(false)
-    // Send Instance ID token to app server.
-    sendTokenToServer(refreshedToken)
+  messaging.getToken().then(function (token) {
+    console.log('Got fcm token')
+    vApp.user.fcmTokens[token] = true
+    vApp.fcmTokenRefreshed = true
+    vApp.userDocRef.set(vApp.user).then(function () {
+      console.log('fcmToken written')
+    })
   }).catch(function (err) {
     console.log('Unable to retrieve refreshed token ', err)
   })
 }
 
-// Send the Instance ID token your application server, so that it can:
-// - send messages back to this app
-// - subscribe/unsubscribe the token from topics
-function sendTokenToServer (currentToken) {
-  if (!isTokenSentToServer()) {
-    console.log('Sending token to server...')
-    console.log(currentToken)
+// // Send the Instance ID token your application server, so that it can:
+// // - send messages back to this app
+// // - subscribe/unsubscribe the token from topics
+// function sendTokenToServer (currentToken) {
+//   if (!isTokenSentToServer()) {
+//     console.log('Sending token to server...')
+//     console.log(currentToken)
 
-    const userUpdate = vApp.user
-    if (!userUpdate.fcmTokens) {
-      console.log('no tokens')
-      userUpdate.fcmTokens = {}
-    }
-    userUpdate.fcmTokens[currentToken] = true
+//     // TODO deep copy and only set vApp.user when write complete?
+//     vApp.userDocRef.set(vApp.user).then(function () {
+//       console.log('fcmToken written')
+//       // Send the current token to your server.
+//       setTokenSentToServer(true)
+//     })
+//   } else {
+//     console.log('Token already sent to server so won\'t send it again ' +
+//           'unless it changes')
+//   }
+// }
 
-    vApp.userDocRef.set(userUpdate).then(function () {
-      console.log('fcmToken written')
-      vApp.user = userUpdate
-      // Send the current token to your server.
-      setTokenSentToServer(true)
-    })
-  } else {
-    console.log('Token already sent to server so won\'t send it again ' +
-          'unless it changes')
-  }
-}
+// function unsubscribeFromTopic (topic) {
+//   if (isEmpty(vApp.user.fcmTokens)) {
+//     console.log('no fcm tokens')
+//     return
+//   }
+
+//   delete vApp.user.topics[topic]
+//   vApp.userDocRef.set(vApp.user).then(function () {
+//     console.log('topic', topic, 'unsubscribed')
+//   })
+// }
+
+// function subscribeToTopic (topic) {
+//   if (isEmpty(vApp.user.fcmTokens)) {
+//     console.log('no fcm tokens')
+//     return
+//   }
+
+//   vApp.user.topics[topic] = true
+//   vApp.userDocRef.set(vApp.user).then(function () {
+//     console.log('topic', topic, 'subscribed')
+//   })
+// }
 
 // function readyForPush () {
 //   return vApp.signedIn && vApp.notificationPermissionGranted && isTokenSentToServer()
 // }
 
 function askForNotificationPermission () {
-  // TODO pop up asking for permission
-  console.log('asking for notification permission')
-  messaging.requestPermission()
-    .then(function () {
-      console.log('Notification permission granted.')
-      vApp.notificationPermissionGranted = true
-      getMessagingToken()
+  if (!vApp.notificationPermissionGranted) {
+    console.log('asking for notification permission')
+    $('#notificationPermissionRequestModal').modal({})
+    $('#enableNotificationButton').on('click', function (e) {
+      console.log('browser api request notification permission')
+      try {
+        messaging.requestPermission()
+          .then(function () {
+            console.log('Notification permission granted.')
+            vApp.notificationPermissionGranted = true
+            getMessagingToken()
+          })
+          .catch(function (err) {
+            console.log('Unable to get permission to notify.', err)
+          })
+      } catch (err) {
+        console.log(err)
+      }
     })
-    .catch(function (err) {
-      console.log('Unable to get permission to notify.', err)
-    })
+  } else {
+    console.log('permission already granted')
+    getMessagingToken()
+  }
 }
 
 // gmaps autocomplete handler
@@ -299,6 +367,7 @@ function getPrayerTimesForLocation (locationDescription, location) {
         if (searchRadiusMeters && distanceMeters > searchRadiusMeters) { continue }
         const distLabel = (distanceMeters * 0.000621371192).toFixed(2)
         const merged = Object.assign({
+          fcmTopic: doc.id,
           distanceMeters: distanceMeters,
           distLabel: distLabel,
           diffTz: (userTz !== evt.timeZoneId),
@@ -397,22 +466,51 @@ function timeSince (date) {
   return secondsSince + ' seconds'
 }
 
-function isTokenSentToServer () {
-  if (window.localStorage.getItem('sentToServer') === '1') {
-    vApp.sentToServer = '1'
-    return true
-  } else {
-    vApp.sentToServer = '0'
-    return false
-  }
-}
+// function isTokenSentToServer () {
+//   if (window.localStorage.getItem('sentToServer') === '1') {
+//     vApp.sentToServer = '1'
+//     return true
+//   } else {
+//     vApp.sentToServer = '0'
+//     return false
+//   }
+// }
 
-function setTokenSentToServer (sent) {
-  if (sent) {
-    vApp.sentToServer = '1'
-    window.localStorage.setItem('sentToServer', '1')
-  } else {
-    vApp.sentToServer = '0'
-    window.localStorage.setItem('sentToServer', '0')
-  }
-}
+// function setTokenSentToServer (sent) {
+//   if (sent) {
+//     vApp.sentToServer = '1'
+//     window.localStorage.setItem('sentToServer', '1')
+//   } else {
+//     vApp.sentToServer = '0'
+//     window.localStorage.setItem('sentToServer', '0')
+//   }
+// }
+
+// // https://stackoverflow.com/a/4994244
+
+// // Speed up calls to hasOwnProperty
+// const hasOwnProperty = Object.prototype.hasOwnProperty
+
+// function isEmpty (obj) {
+//   // null and undefined are "empty"
+//   if (obj == null) return true
+
+//   // Assume if it has a length property with a non-zero value
+//   // that that property is correct.
+//   if (obj.length > 0) return false
+//   if (obj.length === 0) return true
+
+//   // If it isn't an object at this point
+//   // it is empty, but it can't be anything *but* empty
+//   // Is it empty?  Depends on your application.
+//   if (typeof obj !== 'object') return true
+
+//   // Otherwise, does it have any properties of its own?
+//   // Note that this doesn't handle
+//   // toString and valueOf enumeration bugs in IE < 9
+//   for (var key in obj) {
+//     if (hasOwnProperty.call(obj, key)) return false
+//   }
+
+//   return true
+// }
