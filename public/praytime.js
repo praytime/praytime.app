@@ -180,21 +180,21 @@ function setupMessaging () {
               getMessagingToken()
               // }
             } else {
-              askForNotificationPermission()
+              // askForNotificationPermission()
             }
           })
           .catch(function (err) {
             console.log(err)
-            askForNotificationPermission()
+            // askForNotificationPermission()
           })
       } else {
       // TODO: check persistent storage?
-        askForNotificationPermission()
+        // askForNotificationPermission()
       }
     } catch (err) {
       console.log(err)
       // TODO: check persistent storage?
-      askForNotificationPermission()
+      // askForNotificationPermission()
     }
 
     messaging.onTokenRefresh(function () {
@@ -388,6 +388,10 @@ function getPrayerTimesForLocation (locationDescription, location) {
       }
 
       if (events.length) {
+        if (vApp.messagingSupported && !vApp.notificationPermissionGranted) {
+          // if messaging supported, try and get permission for push notifications
+          askForNotificationPermission()
+        }
         // sort by distance
         events.sort((a, b) => { return a.distanceMeters - b.distanceMeters })
         vApp.message = 'Prayer times within ' + searchRadiusMiles + ' miles of ' + locationDescription
