@@ -100,7 +100,7 @@ firebase.auth().signInAnonymously().catch(function (err) {
 
 firebase.auth().onAuthStateChanged(function (u) {
   if (u) {
-    console.log('user signed in:', u)
+    console.log('user signed in:', u.uid)
     vApp.userDocRef = db.collection('Users').doc(u.uid)
     vApp.userDocRef.get().then(function (user) {
       if (user.exists) {
@@ -145,16 +145,28 @@ autocomplete.addListener('place_changed', gmapsAutocompletePlaceChangeListener)
 
 // If geolocation permission is granted, just load results for the current location automatically
 try {
-  if (!!navigator.permissions && !!navigator.geolocation) {
-    navigator.permissions.query({ name: 'geolocation' })
+  if ('permissions' in navigator) {
+    navigator.permissions.query({ name: 'notifications' })
       .then(function (result) {
         if (result.state === 'granted') {
-          getCurrentPosition()
+          vApp.notificationPermissionGranted = true
         }
       })
       .catch(function (err) {
         console.log(err)
       })
+
+    if ('geolocation' in navigator) {
+      navigator.permissions.query({ name: 'geolocation' })
+        .then(function (result) {
+          if (result.state === 'granted') {
+            getCurrentPosition()
+          }
+        })
+        .catch(function (err) {
+          console.log(err)
+        })
+    }
   }
 } catch (err) {
   console.log(err)
@@ -171,21 +183,19 @@ function setupMessaging () {
 
     // check if notification permission already granted:
     try {
-      if ('permissions' in navigator) {
+      if (vApp.notificationPermissionGranted) {
+        getMessagingToken()
+      } else if ('permissions' in navigator) {
         navigator.permissions.query({ name: 'notifications' })
           .then(function (result) {
+            console.log('navigator.permissions.query for notifications result:', result)
             if (result.state === 'granted') {
               vApp.notificationPermissionGranted = true
-              // if (!isTokenSentToServer()) {
               getMessagingToken()
-              // }
-            } else {
-              // askForNotificationPermission()
             }
           })
           .catch(function (err) {
             console.log(err)
-            // askForNotificationPermission()
           })
       } else {
       // TODO: check persistent storage?
@@ -208,7 +218,7 @@ function setupMessaging () {
     // //   `messaging.setBackgroundMessageHandler` handler.
     messaging.onMessage(function (payload) {
       console.log('Message received. ', payload)
-      window.alert(payload.data)
+      window.alert(payload.data.title + ': ' + payload.data.body)
     })
   }
 }

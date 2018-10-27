@@ -78,3 +78,36 @@ exports.deleteUser = functions.firestore
     console.log('Delete user: ', oldUser)
     updateSubcription(oldUser.id, tokens, oldTopics, null)
   })
+
+// // token: {
+// //  defunct bool
+// //  desired string[]
+// //  current string[]
+// // }
+
+// exports.createToken = functions.firestore
+//   .document('Users/{userId}/tokens/{tokenId}')
+//   .onCreate((snap, context) => {
+//     // if defunct, delete myself.
+//     // else compare desired to current
+//     //  if any diff, make api calls to make desired match current
+//     //  if any token error, make token defunct
+//     //  write new current
+//   })
+
+// exports.updateToken = functions.firestore
+//   .document('Users/{userId}/tokens/{tokenId}')
+//   .onUpdate((change, context) => {
+//     // if defunct, delete myself.
+//     // else compare desired to current
+//     //  if any diff, make api calls to make desired match current
+//     //  if any token error, make token defunct
+//     //  write new current
+//   })
+
+// exports.deleteToken = functions.firestore
+//   .document('Users/{userId}/tokens/{tokenId}')
+//   .onDelete((snap, context) => {
+//     // if defunct, do nothing.
+//     // else unsubscribe from all current
+//   })
