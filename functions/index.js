@@ -2,6 +2,8 @@
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
 admin.initializeApp()
+const db = admin.firestore()
+db.settings({ timestampsInSnapshots: true })
 
 function arrayDiff (prev, curr) {
   if (!Array.isArray(prev)) { prev = [] }
@@ -14,100 +16,167 @@ function arrayDiff (prev, curr) {
   }
 }
 
-// Make appropriate calls to unsubscribe / subscribe topic.
-function updateSubcription (userId, tokens, oldTopics, newTopics) {
-  console.log('updateSubscription(',
-    typeof userId, userId, ',',
-    typeof tokens, tokens, ',',
-    typeof oldTopics, oldTopics, ',',
-    typeof newTopics, newTopics, ')')
-  console.log(typeof tokens)
-  const topics = arrayDiff(oldTopics, newTopics)
-  // TODO: clean up tokens w/errors
-  // const tokensToRemove = []
-  topics.deleted.forEach((topic) => {
-    admin.messaging().unsubscribeFromTopic(tokens, topic)
-      .then(function (response) {
-        console.log('Successfully unsubscribed from topic:', response)
-      })
-      .catch(function (error) {
-        console.log('Error unsubscribing from topic:', error)
-      })
-  })
+// TODO
+// const keys = obj => obj == null ? [] : Object.keys(obj)
+function keys (obj) {
+  if (obj == null) { return [] }
 
-  topics.added.forEach((topic) => {
-    admin.messaging().subscribeToTopic(tokens, topic)
-      .then(function (response) {
-        console.log('Successfully subscribed to topic:', response)
+  return Object.keys(obj)
+}
+
+// user: {
+//  topics string[]
+// }
+
+function updateTopics (ref, topics) {
+  return ref.get()
+    .then(function (snapshot) {
+      if (snapshot.size === 0) {
+        return true
+      }
+
+      const batch = db.batch()
+      snapshot.forEach(function (doc) {
+        batch.update(doc.ref, { desiredTopics: topics })
       })
-      .catch(function (error) {
-        console.log('Error subscribing to topic:', error)
-      })
-  })
+      return batch.commit()
+    })
 }
 
 exports.createUser = functions.firestore
   .document('Users/{userId}')
   .onCreate((snap, context) => {
-    const newUser = snap.data()
-    const tokens = Object.keys(newUser.fcmTokens)
-    const newTopics = Object.keys(newUser.topics)
-    console.log('New user: ', newUser)
-    updateSubcription(newUser.id, tokens, null, newTopics)
+    const userDoc = snap.data()
+
+    if (keys(userDoc.topics) === 0) {
+      // nothing to do
+      return true
+    }
+
+    return updateTopics(snap.ref.collection('FCMTokens'), userDoc.topics)
   })
 
 exports.updateUser = functions.firestore
   .document('Users/{userId}')
   .onUpdate((change, context) => {
-    const newUser = change.after.data()
-    const oldUser = change.before.data()
-    const tokens = Object.keys(newUser.fcmTokens)
-    const oldTopics = Object.keys(oldUser.topics)
-    const newTopics = Object.keys(newUser.topics)
-    console.log(typeof newUser.fcmTokens)
-    console.log('Modify user, old: ', oldUser, ' new: ', newUser)
-    updateSubcription(newUser.id, tokens, oldTopics, newTopics)
+    const topicDiff = arrayDiff(keys(change.before.data().topics), keys(change.after.data().topics))
+
+    if (topicDiff.added.length === 0 && topicDiff.deleted.length === 0) {
+      // nothing to do
+      return true
+    }
+
+    return updateTopics(change.after.ref.collection('FCMTokens'), change.after.data().topics)
   })
 
 exports.deleteUser = functions.firestore
   .document('Users/{userId}')
   .onDelete((snap, context) => {
-    const oldUser = snap.data()
-    const tokens = Object.keys(oldUser.fcmTokens)
-    const oldTopics = Object.keys(oldUser.topics)
-    console.log('Delete user: ', oldUser)
-    updateSubcription(oldUser.id, tokens, oldTopics, null)
+    return snap.ref.collection('FCMTokens').get()
+      .then(function (snapshot) {
+        if (snapshot.size === 0) {
+          return true
+        }
+
+        // Delete documents in a batch
+        const batch = db.batch()
+        snapshot.docs.forEach((doc) => {
+          batch.delete(doc.ref)
+        })
+        return batch.commit()
+      })
   })
 
-// // token: {
-// //  defunct bool
-// //  desired string[]
-// //  current string[]
-// // }
+// token: {
+//  defunct bool
+//  desiredTopics string[]
+//  currentTopics string[]
+// }
 
-// exports.createToken = functions.firestore
-//   .document('Users/{userId}/tokens/{tokenId}')
-//   .onCreate((snap, context) => {
-//     // if defunct, delete myself.
-//     // else compare desired to current
-//     //  if any diff, make api calls to make desired match current
-//     //  if any token error, make token defunct
-//     //  write new current
-//   })
+// Define a common error handler for topic management api errors
+function topicManagementErrorHandler (errors, tokenDoc) {
+  for (const error of errors) {
+    console.error(error)
+    // Cleanup the tokens who are not registered anymore.
+    if (error.code === 'messaging/invalid-registration-token' ||
+              error.code === 'messaging/registration-token-not-registered') {
+      tokenDoc.defunct = true
+    }
+  }
+}
 
-// exports.updateToken = functions.firestore
-//   .document('Users/{userId}/tokens/{tokenId}')
-//   .onUpdate((change, context) => {
-//     // if defunct, delete myself.
-//     // else compare desired to current
-//     //  if any diff, make api calls to make desired match current
-//     //  if any token error, make token defunct
-//     //  write new current
-//   })
+function topicManagment (tokenId, tokenDoc, added, deleted) {
+  return Promise.all([
+    Promise.all(added.map(topic =>
+      admin.messaging()
+        .subscribeToTopic(tokenId, topic)
+        .then(response => {
+          if (response.failureCount > 0) {
+            topicManagementErrorHandler(response.errors)
+          } else {
+            tokenDoc.currentTopics[topic] = true
+          }
+        }))),
+    Promise.all(deleted.map(topic =>
+      admin.messaging()
+        .unsubscribeFromTopic(tokenId, topic)
+        .then(response => {
+          if (response.failureCount > 0) {
+            topicManagementErrorHandler(response.errors)
+          } else {
+            delete tokenDoc.currentTopics[topic]
+          }
+        })))
+  ])
+}
 
-// exports.deleteToken = functions.firestore
-//   .document('Users/{userId}/tokens/{tokenId}')
-//   .onDelete((snap, context) => {
-//     // if defunct, do nothing.
-//     // else unsubscribe from all current
-//   })
+function handleWrite (tokenId, snap) {
+  const tokenDoc = snap.data()
+  console.log('handleWrite', tokenDoc)
+
+  if (tokenDoc.defunct) {
+    return snap.ref.delete()
+      .catch(error => console.error('handleWrite[defunct] error:', error))
+  }
+
+  if (typeof tokenDoc.currentTopics === 'undefined' || tokenDoc.currentTopics == null) {
+    tokenDoc.currentTopics = {}
+  }
+
+  const topicDiff = arrayDiff(keys(tokenDoc.currentTopics), keys(tokenDoc.desiredTopics))
+
+  if (topicDiff.added.length === 0 && topicDiff.deleted.length === 0) {
+    // nothing to do
+    return true
+  }
+
+  return topicManagment(tokenId, tokenDoc, topicDiff.added, topicDiff.deleted)
+    .then(response => {
+      console.log('handleWrite going to update currentTopics:', tokenDoc.currentTopics)
+      return snap.ref.update({ currentTopics: tokenDoc.currentTopics })
+    })
+    .catch(error => console.error('handleWrite error:', error))
+}
+
+exports.createToken = functions.firestore
+  .document('Users/{userId}/FCMTokens/{tokenId}')
+  .onCreate((snap, context) => handleWrite(context.params.tokenId, snap))
+
+exports.updateToken = functions.firestore
+  .document('Users/{userId}/FCMTokens/{tokenId}')
+  .onUpdate((change, context) => handleWrite(context.params.tokenId, change.after))
+
+exports.deleteToken = functions.firestore
+  .document('Users/{userId}/FCMTokens/{tokenId}')
+  .onDelete((snap, context) => {
+    const token = snap.data()
+    console.log('deleteToken', token)
+    if (token.defunct || token.currentTopics.length === 0) {
+      // nothing to do
+      return true
+    }
+
+    return keys(token.currentTopics).map(topic =>
+      admin.messaging().unsubscribeFromTopic(context.params.tokenId, topic))
+      .catch(error => console.error('deleteToken error:', error))
+  })

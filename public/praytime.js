@@ -53,7 +53,7 @@ const vApp = new Vue({
 
       // sync topic list
       for (const topic in this.topics) {
-        if (topic) {
+        if (this.topics[topic]) {
           this.user.topics[topic] = true
         } else {
           delete this.user.topics[topic]
@@ -114,7 +114,6 @@ firebase.auth().onAuthStateChanged(function (u) {
         console.log('New user')
         vApp.user = {
           id: u.uid,
-          fcmTokens: {},
           topics: {}
         }
         // vApp.userDocRef.set(newUser).then(function () {
@@ -218,21 +217,23 @@ function setupMessaging () {
     // //   `messaging.setBackgroundMessageHandler` handler.
     messaging.onMessage(function (payload) {
       console.log('Message received. ', payload)
-      window.alert(payload.data.title + ': ' + payload.data.body)
+      window.alert(payload.notification.title + ': ' + payload.notification.body)
     })
   }
 }
 
 function getMessagingToken () {
   messaging.getToken().then(function (token) {
-    console.log('Got fcm token')
-    vApp.user.fcmTokens[token] = true
+    console.log('Got fcm token', token)
+    if (!vApp.signedIn) { throw new Error('Not signed in') }
+    // write to subcollection
+    // set-with-merge will create the doc if it doesn't exist, or only update the defunct field otherwise
+    return db.collection('Users').doc(vApp.user.id).collection('FCMTokens').doc(token).set({ defunct: false }, { merge: true })
+  }).then(function () {
     vApp.fcmTokenRefreshed = true
-    vApp.userDocRef.set(vApp.user).then(function () {
-      console.log('fcmToken written')
-    })
+    console.log('fcmToken written')
   }).catch(function (err) {
-    console.log('Unable to retrieve refreshed token ', err)
+    console.log('Unable to retrieve/save refreshed token ', err)
   })
 }
 
@@ -377,7 +378,7 @@ function getPrayerTimesForLocation (locationDescription, location) {
         if (searchRadiusMeters && distanceMeters > searchRadiusMeters) { continue }
         const distLabel = (distanceMeters * 0.000621371192).toFixed(2)
         const merged = Object.assign({
-          fcmTopic: doc.id,
+          fcmTopic: '/topics/' + doc.id,
           distanceMeters: distanceMeters,
           distLabel: distLabel,
           diffTz: (userTz !== evt.timeZoneId),
