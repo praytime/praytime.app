@@ -43,6 +43,26 @@ const vApp = new Vue({
     events: []
   },
   methods: {
+    toggleBookmark: function (event) {
+      console.log('toggle bookmark', event.id)
+
+      if (!this.signedIn) {
+        console.log('user not signed in')
+        return
+      }
+
+      if (event.bookmarked) {
+        delete this.user.bookmarks[event.id]
+      } else {
+        this.user.bookmarks[event.id] = true
+      }
+
+      this.userDocRef.set(this.user).then(function () {
+        console.log('bookmarks saved', event.id)
+        // toggle on successful save
+        event.bookmarked = !event.bookmarked
+      })
+    },
     fcmUpdate: function (fcmTopic) {
       console.log('change ' + fcmTopic, this.topics[fcmTopic])
 
@@ -108,13 +128,25 @@ firebase.auth().onAuthStateChanged(function (u) {
         for (const topic in vApp.user.topics) {
           vApp.topics[topic] = true
         }
+        if (!('bookmarks' in vApp.user)) {
+          vApp.user.bookmarks = {}
+        } else {
+          // update any events
+
+          if (Object.keys(vApp.user.bookmarks).length > 0) {
+            for (const event of vApp.events) {
+              event.bookmarked = event.id in vApp.user.bookmarks
+            }
+          }
+        }
         console.log('User data:', vApp.user)
         console.log('topics:', vApp.topics)
       } else {
         console.log('New user')
         vApp.user = {
           id: u.uid,
-          topics: {}
+          topics: {},
+          bookmarks: {}
         }
         // vApp.userDocRef.set(newUser).then(function () {
         //   console.log('New user saved')
@@ -378,6 +410,8 @@ function getPrayerTimesForLocation (locationDescription, location) {
         if (searchRadiusMeters && distanceMeters > searchRadiusMeters) { continue }
         const distLabel = (distanceMeters * 0.000621371192).toFixed(2)
         const merged = Object.assign({
+          id: doc.id,
+          bookmarked: vApp.signedIn && (doc.id in vApp.user.bookmarks),
           fcmTopic: '/topics/' + doc.id,
           distanceMeters: distanceMeters,
           distLabel: distLabel,
