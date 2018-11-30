@@ -33,6 +33,7 @@ const vApp = new Vue({
     signedIn: false,
     messagingSupported: firebase.messaging.isSupported(),
     notificationPermissionGranted: false,
+    notificationPermissionAsked: false,
     fcmTokenRefreshed: false,
     topics: {},
     user: null,
@@ -43,6 +44,31 @@ const vApp = new Vue({
     events: []
   },
   methods: {
+    toggleNotification: function (event) {
+      console.log('toggle notification', event.id)
+
+      if (!this.signedIn) {
+        console.log('user not signed in')
+        return
+      }
+
+      if (!this.fcmTokenRefreshed) {
+        console.log('no fcm token yet')
+        return
+      }
+
+      if (event.subscribed) {
+        delete this.user.topics[event.fcmTopic]
+      } else {
+        this.user.topics[event.fcmTopic] = true
+      }
+
+      this.userDocRef.set(this.user).then(function () {
+        console.log('topics saved', event.id)
+        // toggle on successful save
+        event.subscribed = !event.subscribed
+      })
+    },
     toggleBookmark: function (event) {
       console.log('toggle bookmark', event.id)
 
@@ -61,32 +87,6 @@ const vApp = new Vue({
         console.log('bookmarks saved', event.id)
         // toggle on successful save
         event.bookmarked = !event.bookmarked
-      })
-    },
-    fcmUpdate: function (fcmTopic) {
-      console.log('change ' + fcmTopic, this.topics[fcmTopic])
-
-      if (!this.signedIn) {
-        console.log('user not signed in')
-        return
-      }
-
-      // sync topic list
-      for (const topic in this.topics) {
-        if (this.topics[topic]) {
-          this.user.topics[topic] = true
-        } else {
-          delete this.user.topics[topic]
-        }
-      }
-
-      if (!this.fcmTokenRefreshed) {
-        console.log('no fcm token yet')
-        return
-      }
-
-      this.userDocRef.set(this.user).then(function () {
-        console.log('topics saved')
       })
     }
   }
@@ -125,18 +125,35 @@ firebase.auth().onAuthStateChanged(function (u) {
     vApp.userDocRef.get().then(function (user) {
       if (user.exists) {
         vApp.user = user.data()
-        for (const topic in vApp.user.topics) {
-          vApp.topics[topic] = true
+
+        if (Object.keys(vApp.user.topics).length > 0 && vApp.events.length > 0) {
+          // update events if already retrieved
+          for (const event of vApp.events) {
+            event.subscribed = event.fcmTopic in vApp.user.topics
+          }
         }
+
         if (!('bookmarks' in vApp.user)) {
           vApp.user.bookmarks = {}
         } else {
-          // update any events
-
+          // update events if already retrieved
           if (Object.keys(vApp.user.bookmarks).length > 0) {
-            for (const event of vApp.events) {
-              event.bookmarked = event.id in vApp.user.bookmarks
+            if (vApp.events.length > 0) {
+              for (const event of vApp.events) {
+                event.bookmarked = event.id in vApp.user.bookmarks
+              }
             }
+            // get bookmarked events
+            console.log('getting bookmarked events')
+            getById(db, 'Events', Object.keys(vApp.user.bookmarks)).then(function (results) {
+              console.log('bookmarked events:', results)
+              if (vApp.messagingSupported && !vApp.notificationPermissionGranted) {
+                // if messaging supported, try and get permission for push notifications
+                askForNotificationPermission()
+              }
+              // Add bookmarked masaajid to beginning of results
+              vApp.events = results.map(result => docToEvent(result)).concat(vApp.events)
+            })
           }
         }
         console.log('User data:', vApp.user)
@@ -319,6 +336,11 @@ function getMessagingToken () {
 
 function askForNotificationPermission () {
   if (!vApp.notificationPermissionGranted) {
+    if (vApp.notificationPermissionAsked) {
+      // already asked
+      return
+    }
+    vApp.notificationPermissionAsked = true
     console.log('asking for notification permission')
     $('#notificationPermissionRequestModal').modal({})
     $('#enableNotificationButton').on('click', function (e) {
@@ -391,6 +413,40 @@ function getCurrentPosition () {
   })
 }
 
+function docToEvent (doc) {
+  const evt = doc.data()
+
+  const times = SunCalc.getTimes(now, evt.geo.latitude, evt.geo.longitude)
+  const fcmTopic = '/topics/' + doc.id
+
+  const merged = Object.assign({
+    id: doc.id,
+    fcmTopic: fcmTopic,
+    bookmarked: vApp.signedIn && (doc.id in vApp.user.bookmarks),
+    subscribed: vApp.signedIn && (fcmTopic in vApp.user.topics),
+    // distanceMeters: distanceMeters,
+    distLabel: '-',
+    diffTz: (userTz !== evt.timeZoneId),
+    sunrise: hourMinuteString(times.sunrise, evt.timeZoneId),
+    sunset: hourMinuteString(times.sunset, evt.timeZoneId),
+    fajrIsModified: (evt.fajrIqamaModified && hoursSince(evt.fajrIqamaModified.toDate()) < 24),
+    zuhrIsModified: (evt.zuhrIqamaModified && hoursSince(evt.zuhrIqamaModified.toDate()) < 24),
+    asrIsModified: (evt.asrIqamaModified && hoursSince(evt.asrIqamaModified.toDate()) < 24),
+    maghribIsModified: (evt.maghribIqamaModified && hoursSince(evt.maghribIqamaModified.toDate()) < 24),
+    ishaIsModified: (evt.ishaIqamaModified && hoursSince(evt.ishaIqamaModified.toDate()) < 24),
+    juma1IsModified: (evt.juma1Modified && hoursSince(evt.juma1Modified.toDate()) < 24),
+    juma2IsModified: (evt.juma2Modified && hoursSince(evt.juma2Modified.toDate()) < 24),
+    juma3IsModified: (evt.juma3Modified && hoursSince(evt.juma3Modified.toDate()) < 24),
+    updatedLabel: timeSince(evt.crawlTime.toDate()),
+    stale: (hoursSince(evt.crawlTime.toDate()) > 12)
+  }, evt)
+  return merged
+}
+
+function getById (firestore, path, ids) {
+  return Promise.all([].concat(ids).map(id => firestore.doc(path + '/' + id).get()))
+}
+
 // Perform firebase query for given location
 function getPrayerTimesForLocation (locationDescription, location) {
   vApp.message = 'Getting prayer times for ' + locationDescription + '...'
@@ -404,31 +460,14 @@ function getPrayerTimesForLocation (locationDescription, location) {
       for (const doc of querySnapshotRef.docs) {
         const evt = doc.data()
         const distanceMeters = google.maps.geometry.spherical.computeDistanceBetween(location, new google.maps.LatLng(evt.geo.latitude, evt.geo.longitude))
-
-        const times = SunCalc.getTimes(now, evt.geo.latitude, evt.geo.longitude)
-
         if (searchRadiusMeters && distanceMeters > searchRadiusMeters) { continue }
+
         const distLabel = (distanceMeters * 0.000621371192).toFixed(2)
-        const merged = Object.assign({
-          id: doc.id,
-          bookmarked: vApp.signedIn && (doc.id in vApp.user.bookmarks),
-          fcmTopic: '/topics/' + doc.id,
-          distanceMeters: distanceMeters,
-          distLabel: distLabel,
-          diffTz: (userTz !== evt.timeZoneId),
-          sunrise: hourMinuteString(times.sunrise, evt.timeZoneId),
-          sunset: hourMinuteString(times.sunset, evt.timeZoneId),
-          fajrIsModified: (evt.fajrIqamaModified && hoursSince(evt.fajrIqamaModified.toDate()) < 24),
-          zuhrIsModified: (evt.zuhrIqamaModified && hoursSince(evt.zuhrIqamaModified.toDate()) < 24),
-          asrIsModified: (evt.asrIqamaModified && hoursSince(evt.asrIqamaModified.toDate()) < 24),
-          maghribIsModified: (evt.maghribIqamaModified && hoursSince(evt.maghribIqamaModified.toDate()) < 24),
-          ishaIsModified: (evt.ishaIqamaModified && hoursSince(evt.ishaIqamaModified.toDate()) < 24),
-          juma1IsModified: (evt.juma1Modified && hoursSince(evt.juma1Modified.toDate()) < 24),
-          juma2IsModified: (evt.juma2Modified && hoursSince(evt.juma2Modified.toDate()) < 24),
-          juma3IsModified: (evt.juma3Modified && hoursSince(evt.juma3Modified.toDate()) < 24),
-          updatedLabel: timeSince(evt.crawlTime.toDate()),
-          stale: (hoursSince(evt.crawlTime.toDate()) > 12)
-        }, evt)
+        const merged = docToEvent(doc)
+
+        merged.distanceMeters = distanceMeters
+        merged.distLabel = distLabel
+
         events.push(merged)
       }
 
@@ -441,7 +480,7 @@ function getPrayerTimesForLocation (locationDescription, location) {
         events.sort((a, b) => { return a.distanceMeters - b.distanceMeters })
         vApp.message = 'Prayer times within ' + searchRadiusMiles + ' miles of ' + locationDescription
         vApp.messageClass = 'text-success'
-        vApp.events = events
+        vApp.events = vApp.events.concat(events)
       } else {
         vApp.message = 'No prayer times found within ' + searchRadiusMiles + ' miles of ' + locationDescription
         vApp.messageClass = 'text-info'

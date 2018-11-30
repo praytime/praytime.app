@@ -23,7 +23,7 @@
   <meta name="msapplication-TileColor" content="#da532c">
   <meta name="theme-color" content="#ffffff">
 
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
 
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
@@ -37,34 +37,16 @@
 
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-GheSc0eKtS4paXu3SjJDsPGxA5WReRk&libraries=geometry,places"></script>
 
-  <script src="/__/firebase/5.5.5/firebase-app.js"></script>
-  <script src="/__/firebase/5.5.5/firebase-auth.js"></script>
-  <script src="/__/firebase/5.5.5/firebase-firestore.js"></script>
-  <script src="/__/firebase/5.5.5/firebase-messaging.js"></script>
+  <script src="/__/firebase/5.5.9/firebase-app.js"></script>
+  <script src="/__/firebase/5.5.9/firebase-auth.js"></script>
+  <script src="/__/firebase/5.5.9/firebase-firestore.js"></script>
+  <script src="/__/firebase/5.5.9/firebase-messaging.js"></script>
   <script src="/__/firebase/init.js"></script>
 
   <style>
     [v-cloak] {
       display: none;
     }
-
-    .material-icons { font-size: 18px; }
-    /* https://github.com/google/material-design-icons/issues/206#issuecomment-433823274  */
-    /* .material-icons { vertical-align: sub; font-size: 18px; } */
-
-    /* Rules for using icons as black on a light background. */
-    /*
-    .material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
-    .material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
-
-    .btn-group-xs > .btn, .btn-xs {
-      padding  : .25rem .4rem;
-      font-size  : .875rem;
-      line-height  : .5;
-      border-radius : .2rem;
-    }
-    */
-
   </style>
 
   <title>praytime | masjid iqamah times</title>
@@ -120,7 +102,7 @@
             <h6 class="card-subtitle mb-2 text-muted"><address>{{ event.address }}</address></h6>
             <p class="text-center">
               <a target="_blank" :href="'https://www.google.com/maps/search/?api=1&query=' + event.name + '&query_place_id=' + event.placeId">
-                <i class="material-icons md-18">navigation</i> {{ event.distLabel }} mi</a> |
+                <i class="fas fa-map-marked-alt"></i> {{ event.distLabel }} mi</a> |
             ☀️▲ {{ event.sunrise }} | ☀️▼ {{ event.sunset }}
             </p>
             <table class="table table-sm">
@@ -159,22 +141,18 @@
             </table>
             <p v-if="!(event.fajrIqama || event.juma1)">Check website for prayer times.</p>
             <p v-if="event.diffTz" class="text-warning">Note: This masjid may be in a a different time zone</p>
-            <p v-cloak v-if="messagingSupported && notificationPermissionGranted && signedIn">
-              <input type="checkbox" id="checkbox" @change="fcmUpdate(event.fcmTopic)" v-model="topics[event.fcmTopic]">
-              <label for="checkbox">Notify me of time changes</label>
-            </p>
             <small v-bind:class="{ 'text-danger': event.stale }">
               last updated {{ event.updatedLabel }} ago<br>
             </small>
           </div>
           <div class="card-footer bg-transparent">
             <a href="#" class="btn btn-sm btn-default" @click.prevent="toggleBookmark(event)">
-              <i v-if="!event.bookmarked" class="material-icons">bookmark_border</i>
-              <i v-if="event.bookmarked" class="material-icons">bookmark</i>
+              <i v-if="!event.bookmarked" class="far fa-bookmark" style=" vertical-align: top;"></i>
+              <i v-if="event.bookmarked" class="fas fa-bookmark" style=" vertical-align: top;"></i>
             </a>
-            <a href="#" class="btn btn-sm btn-default">
-              <i class="material-icons">notifications_none</i>
-              <!-- <i class="material-icons">notifications_active</i> -->
+            <a href="#" v-if="messagingSupported && notificationPermissionGranted && signedIn" class="btn btn-sm btn-default" @click.prevent="toggleNotification(event)">
+              <i v-if="!event.subscribed" class="far fa-bell" style=" vertical-align: top;"></i>
+              <i v-if="event.subscribed" class="fas fa-bell" style=" vertical-align: top;"></i>
             </a>
               <a class="float-right small" :href="'https://gitreports.com/issue/praytime/praytime?issue_title=' + encodeURIComponent(event.name + ' ref:' + event.uuid4)">Report an error</a>
           </div>
@@ -184,6 +162,17 @@
     <div class="mt-5">
       <p><a href="https://gitreports.com/issue/praytime/praytime?issue_title=New+Masjid+Request">Open a ticket to have a new masjid added.</a></p>
       <p>praytime is <a href="https://github.com/praytime/praytime">open source</a>; pull requests welcome.</p>
+      <p>
+        <a class="text-secondary mx-1" href="https://github.com/praytime">
+          <i class="fab fa-github fa-lg"></i>
+        </a>
+        <a class="text-secondary mx-1" href="https://facebook.com/praytime">
+          <i class="fab fa-facebook-f fa-lg"></i>
+        </a>
+        <a class="text-secondary mx-1" href="https://twitter.com/praytime">
+          <i class="fab fa-twitter fa-lg"></i>
+        </a>
+      </p>
     </div>
     <div class="small">
       <p><a href="https://termsfeed.com/disclaimer/53d0df046145b8b97c84f1e5b8f23e2c">disclaimer</a></p>
