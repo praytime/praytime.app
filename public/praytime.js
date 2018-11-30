@@ -142,18 +142,21 @@ firebase.auth().onAuthStateChanged(function (u) {
               for (const event of vApp.events) {
                 event.bookmarked = event.id in vApp.user.bookmarks
               }
-            }
+              // resort events
+              vApp.events.sort(eventCmp)
+            } else {
             // get bookmarked events
-            console.log('getting bookmarked events')
-            getById(db, 'Events', Object.keys(vApp.user.bookmarks)).then(function (results) {
-              console.log('bookmarked events:', results)
-              if (vApp.messagingSupported && !vApp.notificationPermissionGranted) {
+              console.log('getting bookmarked events')
+              getById(db, 'Events', Object.keys(vApp.user.bookmarks)).then(function (results) {
+                console.log('bookmarked events:', results)
+                if (vApp.messagingSupported && !vApp.notificationPermissionGranted) {
                 // if messaging supported, try and get permission for push notifications
-                askForNotificationPermission()
-              }
-              // Add bookmarked masaajid to beginning of results
-              vApp.events = results.map(result => docToEvent(result)).concat(vApp.events)
-            })
+                  askForNotificationPermission()
+                }
+                // Add bookmarked masaajid to beginning of results
+                vApp.events = results.map(result => docToEvent(result))
+              })
+            }
           }
         }
         console.log('User data:', vApp.user)
@@ -447,6 +450,16 @@ function getById (firestore, path, ids) {
   return Promise.all([].concat(ids).map(id => firestore.doc(path + '/' + id).get()))
 }
 
+function eventCmp (a, b) {
+  if (a.bookmarked !== b.bookmarked) {
+    // if a is bookmarked and b is not, return -1 so a ranks higher in the list
+    return a.bookmarked ? -1 : 1
+  } else {
+    // bookmarks same value, sort by distance
+    return a.distanceMeters - b.distanceMeters
+  }
+}
+
 // Perform firebase query for given location
 function getPrayerTimesForLocation (locationDescription, location) {
   vApp.message = 'Getting prayer times for ' + locationDescription + '...'
@@ -476,11 +489,12 @@ function getPrayerTimesForLocation (locationDescription, location) {
           // if messaging supported, try and get permission for push notifications
           askForNotificationPermission()
         }
+        console.log('sorting events')
         // sort by distance
-        events.sort((a, b) => { return a.distanceMeters - b.distanceMeters })
+        events.sort(eventCmp)
         vApp.message = 'Prayer times within ' + searchRadiusMiles + ' miles of ' + locationDescription
         vApp.messageClass = 'text-success'
-        vApp.events = vApp.events.concat(events)
+        vApp.events = events
       } else {
         vApp.message = 'No prayer times found within ' + searchRadiusMiles + ' miles of ' + locationDescription
         vApp.messageClass = 'text-info'
