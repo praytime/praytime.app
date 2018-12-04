@@ -473,10 +473,14 @@ function getPrayerTimesForLocation (locationDescription, location) {
       for (const doc of querySnapshotRef.docs) {
         const evt = doc.data()
         const distanceMeters = google.maps.geometry.spherical.computeDistanceBetween(location, new google.maps.LatLng(evt.geo.latitude, evt.geo.longitude))
-        if (searchRadiusMeters && distanceMeters > searchRadiusMeters) { continue }
 
         const distLabel = (distanceMeters * 0.000621371192).toFixed(2)
         const merged = docToEvent(doc)
+
+        // filter out non-bookmarked results outside search radius
+        if (searchRadiusMeters && distanceMeters > searchRadiusMeters && !merged.bookmarked) {
+          continue
+        }
 
         merged.distanceMeters = distanceMeters
         merged.distLabel = distLabel
