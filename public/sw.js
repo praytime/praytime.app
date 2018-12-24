@@ -2,19 +2,20 @@
 
 // https://medium.com/dev-channel/learn-how-to-build-a-pwa-in-under-5-minutes-c860ad406ed
 
-const cacheName = 'praytime-cache'
+// TODO: use cache-busting hashes then re-enable
+const cacheName = 'praytime-cache-v1'
 const filesToCache = [
-  '/',
-  '/index.html',
-  '/praytime.js',
+  // '/',
+  // '/index.html',
+  // '/praytime.js',
   '/suncalc.js'
 ]
 
 self.addEventListener('install', function (e) {
-  console.log('[ServiceWorker] Install')
+  console.log('[SW] Install')
   e.waitUntil(
     caches.open(cacheName).then(function (cache) {
-      console.log('[ServiceWorker] Caching app shell')
+      console.log('[SW] Caching app shell')
       return cache.addAll(filesToCache)
     })
   )

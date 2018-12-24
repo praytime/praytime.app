@@ -112,11 +112,23 @@ const searchRadiusMeters = searchRadiusMiles * 1609.344
 const db = firebase.firestore()
 db.settings({ timestampsInSnapshots: true })
 
-let messaging = null
+// TODO
+// db.enablePersistence()
+//   .catch(function (err) {
+//     if (err.code === 'failed-precondition') {
+//       // Multiple tabs open, persistence can only be enabled
+//       // in one tab at a a time.
+//       // ...
+//       console.error('firebase enablePersistence failed:', err)
+//     } else if (err.code === 'unimplemented') {
+//       // The current browser does not support all of the
+//       // features required to enable persistence
+//       // ...
+//       console.error('firebase enablePersistence failed:', err)
+//     }
+//   })
 
-firebase.auth().signInAnonymously().catch(function (err) {
-  console.log(err)
-})
+let messaging = null
 
 firebase.auth().onAuthStateChanged(function (u) {
   if (u) {
@@ -168,20 +180,17 @@ firebase.auth().onAuthStateChanged(function (u) {
           topics: {},
           bookmarks: {}
         }
-        // vApp.userDocRef.set(newUser).then(function () {
-        //   console.log('New user saved')
-        //   vApp.user = newUser
-        // }).catch(function (error) {
-        //   console.log('Error saving document:', error)
-        // })
       }
       vApp.signedIn = true
       setupMessaging()
-    }).catch(function (error) {
-      console.log('Error getting document:', error)
+    }).catch(function (err) {
+      console.log('Error getting document:', err)
     })
   } else {
-    console.log('user signed out')
+    console.log('No user - signing in anonymously')
+    firebase.auth().signInAnonymously().catch(function (err) {
+      console.error('firebase signInAnonymously failed:', err)
+    })
     vApp.user = null
     vApp.signedIn = false
   }
@@ -309,34 +318,6 @@ function getMessagingToken () {
 //   }
 // }
 
-// function unsubscribeFromTopic (topic) {
-//   if (isEmpty(vApp.user.fcmTokens)) {
-//     console.log('no fcm tokens')
-//     return
-//   }
-
-//   delete vApp.user.topics[topic]
-//   vApp.userDocRef.set(vApp.user).then(function () {
-//     console.log('topic', topic, 'unsubscribed')
-//   })
-// }
-
-// function subscribeToTopic (topic) {
-//   if (isEmpty(vApp.user.fcmTokens)) {
-//     console.log('no fcm tokens')
-//     return
-//   }
-
-//   vApp.user.topics[topic] = true
-//   vApp.userDocRef.set(vApp.user).then(function () {
-//     console.log('topic', topic, 'subscribed')
-//   })
-// }
-
-// function readyForPush () {
-//   return vApp.signedIn && vApp.notificationPermissionGranted && isTokenSentToServer()
-// }
-
 function askForNotificationPermission () {
   if (!vApp.notificationPermissionGranted) {
     if (vApp.notificationPermissionAsked) {
@@ -446,6 +427,7 @@ function docToEvent (doc) {
   return merged
 }
 
+// multi-get array of ids rooted at path
 function getById (firestore, path, ids) {
   return Promise.all([].concat(ids).map(id => firestore.doc(path + '/' + id).get()))
 }
