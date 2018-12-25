@@ -130,6 +130,18 @@ db.settings({ timestampsInSnapshots: true })
 
 let messaging = null
 
+firebase.auth().signInAnonymously()
+  .then(function (u) {
+    if (u) {
+      console.log('[signInAnonymously]: user signed in:', u.uid)
+    } else {
+      console.error('[signInAnonymously]: user is null')
+    }
+  })
+  .catch(function (err) {
+    console.error('firebase signInAnonymously failed:', err)
+  })
+
 firebase.auth().onAuthStateChanged(function (u) {
   if (u) {
     console.log('user signed in:', u.uid)
@@ -187,10 +199,7 @@ firebase.auth().onAuthStateChanged(function (u) {
       console.log('Error getting document:', err)
     })
   } else {
-    console.log('No user - signing in anonymously')
-    firebase.auth().signInAnonymously().catch(function (err) {
-      console.error('firebase signInAnonymously failed:', err)
-    })
+    console.log('user sign out')
     vApp.user = null
     vApp.signedIn = false
   }
