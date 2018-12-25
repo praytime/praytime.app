@@ -133,7 +133,7 @@ let messaging = null
 firebase.auth().signInAnonymously()
   .then(function (u) {
     if (u) {
-      console.log('[signInAnonymously]: user signed in:', u.uid)
+      console.log('[signInAnonymously]: user signed in:', u.user.uid)
     } else {
       console.error('[signInAnonymously]: user is null')
     }
