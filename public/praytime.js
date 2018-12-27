@@ -130,21 +130,9 @@ db.settings({ timestampsInSnapshots: true })
 
 let messaging = null
 
-firebase.auth().signInAnonymously()
-  .then(function (u) {
-    if (u) {
-      console.log('[signInAnonymously]: user signed in:', u.user.uid)
-    } else {
-      console.error('[signInAnonymously]: user is null')
-    }
-  })
-  .catch(function (err) {
-    console.error('firebase signInAnonymously failed:', err)
-  })
-
 firebase.auth().onAuthStateChanged(function (u) {
   if (u) {
-    console.log('user signed in:', u.uid)
+    console.log('[onAuthStateChanged] user signed in:', u.uid)
     vApp.userDocRef = db.collection('Users').doc(u.uid)
     vApp.userDocRef.get().then(function (user) {
       if (user.exists) {
@@ -199,7 +187,19 @@ firebase.auth().onAuthStateChanged(function (u) {
       console.log('Error getting document:', err)
     })
   } else {
-    console.log('user sign out')
+    console.log('[onAuthStateChanged] new user')
+    firebase.auth().signInAnonymously()
+      .then(function (u) {
+        if (u) {
+          console.log('[signInAnonymously] user signed in:', u.user.uid)
+        } else {
+          console.error('[signInAnonymously] user is null')
+        }
+      })
+      .catch(function (err) {
+        console.error('[signInAnonymously] error:', err)
+      })
+
     vApp.user = null
     vApp.signedIn = false
   }
@@ -306,26 +306,6 @@ function getMessagingToken () {
     console.log('Unable to retrieve/save refreshed token ', err)
   })
 }
-
-// // Send the Instance ID token your application server, so that it can:
-// // - send messages back to this app
-// // - subscribe/unsubscribe the token from topics
-// function sendTokenToServer (currentToken) {
-//   if (!isTokenSentToServer()) {
-//     console.log('Sending token to server...')
-//     console.log(currentToken)
-
-//     // TODO deep copy and only set vApp.user when write complete?
-//     vApp.userDocRef.set(vApp.user).then(function () {
-//       console.log('fcmToken written')
-//       // Send the current token to your server.
-//       setTokenSentToServer(true)
-//     })
-//   } else {
-//     console.log('Token already sent to server so won\'t send it again ' +
-//           'unless it changes')
-//   }
-// }
 
 function askForNotificationPermission () {
   if (!vApp.notificationPermissionGranted) {
@@ -562,52 +542,3 @@ function timeSince (date) {
 
   return secondsSince + ' seconds'
 }
-
-// function isTokenSentToServer () {
-//   if (window.localStorage.getItem('sentToServer') === '1') {
-//     vApp.sentToServer = '1'
-//     return true
-//   } else {
-//     vApp.sentToServer = '0'
-//     return false
-//   }
-// }
-
-// function setTokenSentToServer (sent) {
-//   if (sent) {
-//     vApp.sentToServer = '1'
-//     window.localStorage.setItem('sentToServer', '1')
-//   } else {
-//     vApp.sentToServer = '0'
-//     window.localStorage.setItem('sentToServer', '0')
-//   }
-// }
-
-// // https://stackoverflow.com/a/4994244
-
-// // Speed up calls to hasOwnProperty
-// const hasOwnProperty = Object.prototype.hasOwnProperty
-
-// function isEmpty (obj) {
-//   // null and undefined are "empty"
-//   if (obj == null) return true
-
-//   // Assume if it has a length property with a non-zero value
-//   // that that property is correct.
-//   if (obj.length > 0) return false
-//   if (obj.length === 0) return true
-
-//   // If it isn't an object at this point
-//   // it is empty, but it can't be anything *but* empty
-//   // Is it empty?  Depends on your application.
-//   if (typeof obj !== 'object') return true
-
-//   // Otherwise, does it have any properties of its own?
-//   // Note that this doesn't handle
-//   // toString and valueOf enumeration bugs in IE < 9
-//   for (var key in obj) {
-//     if (hasOwnProperty.call(obj, key)) return false
-//   }
-
-//   return true
-// }
