@@ -110,7 +110,8 @@ if (url.searchParams.has('r')) {
 const searchRadiusMeters = searchRadiusMiles * 1609.344
 
 const db = firebase.firestore()
-db.settings({ timestampsInSnapshots: true })
+// This is now the default setting
+// db.settings({ timestampsInSnapshots: true })
 
 // TODO
 // db.enablePersistence()

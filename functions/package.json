@@ -1,7 +1,7 @@
 {
     "dependencies": {
-        "firebase-admin": "^6.4.0",
-        "firebase-functions": "^2.1.0"
+        "firebase-admin": "^8.9.2",
+        "firebase-functions": "^3.3.0"
     },
     "description": "Cloud Functions for Firebase",
     "engines": {
