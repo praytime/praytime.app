@@ -1,4 +1,6 @@
-/* global Vue, firebase, google, SunCalc, $ */
+/* global Vue, firebase, google $ */
+
+import SunCalc from 'suncalc'
 
 //
 // GLOBALS / MAIN

@@ -8,7 +8,6 @@ const filesToCache = [
   // '/',
   // '/index.html',
   // '/praytime.js',
-  '/suncalc.js'
 ]
 
 self.addEventListener('install', function (e) {

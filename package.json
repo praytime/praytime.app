@@ -1,0 +1,27 @@
+{
+  "name": "praytime.app",
+  "version": "1.0.0",
+  "description": "https://praytime.app frontend",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/praytime/praytime.app.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/praytime/praytime.app/issues"
+  },
+  "homepage": "https://github.com/praytime/praytime.app#readme",
+  "devDependencies": {
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11"
+  },
+  "dependencies": {
+    "suncalc": "^1.8.0"
+  }
+}
