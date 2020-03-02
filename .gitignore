@@ -1,3 +1,9 @@
-node_modules
 firebase-debug.log
 .firebase
+
+# ignore webpack generated files
+dist/
+
+# ignore npm dependencies
+node_modules/
+
