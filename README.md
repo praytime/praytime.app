@@ -8,7 +8,7 @@ To develop locally, ensure you have node / npm and firebase tools installed:
 npm install -g firebase-tools
 ```
 
-Run `firebase serve` and browse to http://127.0.0.1:5000
+Run `npm install` followed by `npm run serve` and browse to http://localhost:5000
 
 ## see also
 
