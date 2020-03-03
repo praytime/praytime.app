@@ -4,10 +4,12 @@
   "description": "https://praytime.app frontend",
   "private": true,
   "scripts": {
+    "build": "webpack --mode=development",
     "preserve": "webpack --mode=development",
     "serve": "firebase serve --only hosting",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack"
+    "predeploy": "webpack --mode=production",
+    "deploy": "firebase deploy",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
