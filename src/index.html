@@ -83,7 +83,8 @@
             <input type="text" class="form-control" id="autocomplete" placeholder="Enter a location" :disabled="inputDisabled"/>
           </div>
           <div class="col">
-            <button class="form-control btn btn-primary btn-sm" :disabled="inputDisabled" onclick="getCurrentPosition();return false;">Use current location</button>
+            <button id="currentPositionButton" class="form-control btn btn-primary btn-sm" :disabled="inputDisabled">Use current location</button>
+            <!-- <button id="currentPositionButton" class="form-control btn btn-primary btn-sm" :disabled="inputDisabled" onclick="getCurrentPosition();return false;">Use current location</button> -->
             <!--<a class="form-control btn btn-primary btn-sm" v-bind:class="{ disabled: inputDisabled }" href="#" role="button" onclick="getCurrentPosition();return false;">Current location</a>-->
           </div>
         </div>
@@ -182,6 +183,12 @@
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 
+  <script>
+    document.getElementById("currentPositionButton").addEventListener("click", function() {
+          getCurrentPosition();
+          return false;
+        });
+  </script>
 </body>
 
 </html>
