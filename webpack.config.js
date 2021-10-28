@@ -15,19 +15,12 @@ module.exports = {
   },
   plugins: [
     new CleanWebpackPlugin(),
-    new CopyWebpackPlugin([
-      { from: staticDir, to: distDir }
-    ]),
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: staticDir, to: distDir }
+      ]
+    }),
     new HtmlWebpackPlugin({
-      // hash: true,
-      minify: {
-        collapseWhitespace: true,
-        removeComments: true,
-        removeRedundantAttributes: true,
-        removeScriptTypeAttributes: true,
-        removeStyleLinkTypeAttributes: true,
-        useShortDoctype: true
-      },
       template: './src/index.html'
     })
   ]

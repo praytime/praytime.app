@@ -210,8 +210,8 @@ firebase.auth().onAuthStateChanged(function (u) {
 
 const geocoder = new google.maps.Geocoder()
 const autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'), {
-  types: [ 'geocode' ],
-  fields: [ 'name', 'geometry.location' ]
+  types: ['geocode'],
+  fields: ['name', 'geometry.location']
 })
 autocomplete.addListener('place_changed', gmapsAutocompletePlaceChangeListener)
 
@@ -388,6 +388,9 @@ function getCurrentPosition () {
     }
   })
 }
+// "export" so it can be called from index.html
+// https://stackoverflow.com/a/56805689
+window.getCurrentPosition = getCurrentPosition
 
 function docToEvent (doc) {
   const evt = doc.data()
