@@ -2,6 +2,8 @@
 
 import SunCalc from 'suncalc'
 
+const geofire = require('geofire-common')
+
 //
 // GLOBALS / MAIN
 //
@@ -442,11 +444,23 @@ function getPrayerTimesForLocation (locationDescription, location) {
   vApp.message = 'Getting prayer times for ' + locationDescription + '...'
   vApp.messageClass = 'text-secondary'
 
-  // TODO: add geo bounds to this query
-  // data set is small, so will filter in client for now
-  db.collection('Events').get()
-    .then((querySnapshotRef) => {
-      const events = []
+  // Each item in 'bounds' represents a startAt/endAt pair. We have to issue
+  // a separate query for each pair. There can be up to 9 pairs of bounds
+  // depending on overlap, but in most cases there are 4.
+  const bounds = geofire.geohashQueryBounds([location.lat(), location.lng()], searchRadiusMeters)
+  const promises = []
+  for (const b of bounds) {
+    const q = db.collection('Events')
+      .orderBy('geohash')
+      .startAt(b[0])
+      .endAt(b[1])
+
+    promises.push(q.get())
+  }
+
+  Promise.all(promises).then((querySnapshotRefs) => {
+    const events = []
+    for (const querySnapshotRef of querySnapshotRefs) {
       for (const doc of querySnapshotRef.docs) {
         const evt = doc.data()
         const distanceMeters = google.maps.geometry.spherical.computeDistanceBetween(location, new google.maps.LatLng(evt.geo.latitude, evt.geo.longitude))
@@ -464,23 +478,24 @@ function getPrayerTimesForLocation (locationDescription, location) {
 
         events.push(merged)
       }
+    }
 
-      if (events.length) {
-        if (vApp.messagingSupported && !vApp.notificationPermissionGranted) {
-          // if messaging supported, try and get permission for push notifications
-          askForNotificationPermission()
-        }
-        console.log('sorting events')
-        // sort by distance
-        events.sort(eventCmp)
-        vApp.message = 'Prayer times within ' + searchRadiusMiles + ' miles of ' + locationDescription
-        vApp.messageClass = 'text-success'
-        vApp.events = events
-      } else {
-        vApp.message = 'No prayer times found within ' + searchRadiusMiles + ' miles of ' + locationDescription
-        vApp.messageClass = 'text-info'
+    if (events.length) {
+      if (vApp.messagingSupported && !vApp.notificationPermissionGranted) {
+        // if messaging supported, try and get permission for push notifications
+        askForNotificationPermission()
       }
-    })
+      console.log('sorting events')
+      // sort by distance
+      events.sort(eventCmp)
+      vApp.message = 'Prayer times within ' + searchRadiusMiles + ' miles of ' + locationDescription
+      vApp.messageClass = 'text-success'
+      vApp.events = events
+    } else {
+      vApp.message = 'No prayer times found within ' + searchRadiusMiles + ' miles of ' + locationDescription
+      vApp.messageClass = 'text-info'
+    }
+  })
     .catch((err) => {
       vApp.message = err
       vApp.messageClass = 'text-danger'
