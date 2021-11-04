@@ -7,3 +7,4 @@ dist/
 # ignore npm dependencies
 node_modules/
 
+.npmrc
