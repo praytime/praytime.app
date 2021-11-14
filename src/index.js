@@ -1,5 +1,7 @@
 /* global Vue, firebase, google $ */
 
+import { Loader } from '@googlemaps/js-api-loader'
+
 import SunCalc from 'suncalc'
 
 const geofire = require('geofire-common')
@@ -7,6 +9,37 @@ const geofire = require('geofire-common')
 //
 // GLOBALS / MAIN
 //
+
+const loader = new Loader({
+  apiKey: 'AIzaSyC-GheSc0eKtS4paXu3SjJDsPGxA5WReRk',
+  version: 'weekly',
+  libraries: ['geometry', 'places']
+})
+
+loader.load().then(() => {
+  const geocoder = new google.maps.Geocoder()
+  const autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'), {
+    types: ['geocode'],
+    fields: ['name', 'geometry.location']
+  })
+  autocomplete.addListener('place_changed', () => {
+    const place = autocomplete.getPlace()
+    if (place.geometry) {
+      // got results
+      getPrayerTimesForLocation(place.name, place.geometry.location)
+    } else {
+      // need to do a search
+      geocoder.geocode({ address: document.getElementById('autocomplete').value }, (results, status) => {
+        if (status === 'OK') {
+          getPrayerTimesForLocation(results[0].formatted_address, results[0].geometry.location)
+        } else {
+          vApp.message = 'Not found: ' + status
+          vApp.messageClass = 'text-warning'
+        }
+      })
+    }
+  })
+})
 
 // setup service worker
 if ('serviceWorker' in navigator) {
@@ -210,13 +243,6 @@ firebase.auth().onAuthStateChanged(function (u) {
   }
 })
 
-const geocoder = new google.maps.Geocoder()
-const autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'), {
-  types: ['geocode'],
-  fields: ['name', 'geometry.location']
-})
-autocomplete.addListener('place_changed', gmapsAutocompletePlaceChangeListener)
-
 // If geolocation permission is granted, just load results for the current location automatically
 try {
   if ('permissions' in navigator) {
@@ -340,25 +366,6 @@ function askForNotificationPermission () {
   } else {
     console.log('permission already granted')
     getMessagingToken()
-  }
-}
-
-// gmaps autocomplete handler
-function gmapsAutocompletePlaceChangeListener () {
-  const place = autocomplete.getPlace()
-  if (place.geometry) {
-    // got results
-    getPrayerTimesForLocation(place.name, place.geometry.location)
-  } else {
-    // need to do a search
-    geocoder.geocode({ address: document.getElementById('autocomplete').value }, (results, status) => {
-      if (status === 'OK') {
-        getPrayerTimesForLocation(results[0].formatted_address, results[0].geometry.location)
-      } else {
-        vApp.message = 'Not found: ' + status
-        vApp.messageClass = 'text-warning'
-      }
-    })
   }
 }
 
