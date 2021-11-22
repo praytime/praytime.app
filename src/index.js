@@ -1,4 +1,4 @@
-/* global Vue, firebase, google $ */
+/* global Vue, firebase $ */
 
 import { Loader } from '@googlemaps/js-api-loader'
 
@@ -16,7 +16,9 @@ const loader = new Loader({
   libraries: ['geometry', 'places']
 })
 
-loader.load().then(() => {
+const gmapsLoaderPromise = loader.load()
+
+gmapsLoaderPromise.then(google => {
   const geocoder = new google.maps.Geocoder()
   const autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'), {
     types: ['geocode'],
@@ -26,12 +28,12 @@ loader.load().then(() => {
     const place = autocomplete.getPlace()
     if (place.geometry) {
       // got results
-      getPrayerTimesForLocation(place.name, place.geometry.location)
+      getPrayerTimesForLocation(place.name, place.geometry.location, google)
     } else {
       // need to do a search
       geocoder.geocode({ address: document.getElementById('autocomplete').value }, (results, status) => {
         if (status === 'OK') {
-          getPrayerTimesForLocation(results[0].formatted_address, results[0].geometry.location)
+          getPrayerTimesForLocation(results[0].formatted_address, results[0].geometry.location, google)
         } else {
           vApp.message = 'Not found: ' + status
           vApp.messageClass = 'text-warning'
@@ -39,6 +41,8 @@ loader.load().then(() => {
       })
     }
   })
+}).catch(err => {
+  console.error('[gmaps loader] error:', err)
 })
 
 // setup service worker
@@ -376,7 +380,11 @@ function getCurrentPosition () {
   vApp.messageClass = 'text-secondary'
   navigator.geolocation.getCurrentPosition((pos) => {
     vApp.inputDisabled = false
-    getPrayerTimesForLocation(pos.coords.latitude + ',' + pos.coords.longitude, new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude))
+    gmapsLoaderPromise.then(google => {
+      getPrayerTimesForLocation('current location', new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude), google)
+    }).catch(err => {
+      console.error('[gmaps loader] error:', err)
+    })
   }, (error) => {
     vApp.inputDisabled = false
     switch (error.code) {
@@ -447,7 +455,7 @@ function eventCmp (a, b) {
 }
 
 // Perform firebase query for given location
-function getPrayerTimesForLocation (locationDescription, location) {
+function getPrayerTimesForLocation (locationDescription, location, google) {
   vApp.message = 'Getting prayer times for ' + locationDescription + '...'
   vApp.messageClass = 'text-secondary'
 
