@@ -1,11 +1,11 @@
 {
     "dependencies": {
-        "firebase-admin": "^8.9.2",
-        "firebase-functions": "^3.3.0"
+        "firebase-admin": "^10.0.0",
+        "firebase-functions": "^3.16.0"
     },
     "description": "Cloud Functions for Firebase",
     "engines": {
-        "node": "8"
+        "node": "14"
     },
     "name": "functions",
     "private": true,
