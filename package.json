@@ -7,7 +7,7 @@
     "build": "webpack --mode=development",
     "preserve": "webpack --mode=development",
     "serve": "firebase serve --only hosting",
-    "predeploy": "webpack --mode=production",
+    "predeploy": "rm -rf ./dist/* && webpack --mode=production",
     "deploy": "firebase deploy --only hosting",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
