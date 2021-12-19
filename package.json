@@ -4,8 +4,8 @@
   "description": "https://praytime.app frontend",
   "private": true,
   "scripts": {
-    "build": "webpack --mode=development",
-    "preserve": "webpack --mode=development",
+    "build": "rm -rf ./dist/* && webpack --mode=development",
+    "preserve": "rm -rf ./dist/* && webpack --mode=development",
     "serve": "firebase serve --only hosting",
     "predeploy": "rm -rf ./dist/* && webpack --mode=production",
     "deploy": "firebase deploy --only hosting",
