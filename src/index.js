@@ -10,6 +10,10 @@ const geofire = require('geofire-common')
 // GLOBALS / MAIN
 //
 
+// Init analytics library
+const defaultAnalytics = firebase.analytics()
+console.log('analytics loaded', defaultAnalytics)
+
 const loader = new Loader({
   apiKey: 'AIzaSyC-GheSc0eKtS4paXu3SjJDsPGxA5WReRk',
   version: 'weekly',
