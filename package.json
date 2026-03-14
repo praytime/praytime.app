@@ -28,7 +28,7 @@
     "webpack-cli": "^4.9.2"
   },
   "dependencies": {
-    "@googlemaps/js-api-loader": "github:googlemaps/js-api-loader",
+    "@googlemaps/js-api-loader": "^2.0.2",
     "geofire-common": "^5.2.0",
     "suncalc": "^1.9.0"
   }
