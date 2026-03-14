@@ -10,7 +10,8 @@ Run `npm install` in the repo root for frontend dependencies. Use `cd functions 
 - `npm run serve` serves Firebase Hosting locally at `http://localhost:5000`.
 - `npm run predeploy` creates the production bundle used before Hosting deploys.
 - `npm run deploy` deploys the Hosting target defined in `firebase.json`.
-- `cd functions && npm run serve`, `npm run shell`, `npm run deploy`, and `npm run logs` cover local function emulation, deploys, and logs.
+- `cd functions && npm run serve`, `npm run shell`, and `npm run logs` cover local function emulation, deploys, and logs.
+- github workflows are configured to deploy on push to master branch.
 
 ## Security & Configuration Tips
 Do not add secrets directly to `src/` or `functions/`. Prefer Firebase-managed configuration for anything sensitive, and regenerate build output instead of editing files in `dist/`.
