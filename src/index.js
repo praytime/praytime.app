@@ -1,6 +1,6 @@
 /* global Vue, firebase $ */
 
-import { Loader } from '@googlemaps/js-api-loader'
+import { importLibrary, setOptions } from '@googlemaps/js-api-loader'
 
 import SunCalc from 'suncalc'
 
@@ -14,13 +14,17 @@ const geofire = require('geofire-common')
 const defaultAnalytics = firebase.analytics()
 console.log('analytics loaded', defaultAnalytics)
 
-const loader = new Loader({
-  apiKey: 'AIzaSyC-GheSc0eKtS4paXu3SjJDsPGxA5WReRk',
-  version: 'weekly',
-  libraries: ['geometry', 'places']
+setOptions({
+  key: 'AIzaSyC-GheSc0eKtS4paXu3SjJDsPGxA5WReRk',
+  v: 'weekly'
 })
 
-const gmapsLoaderPromise = loader.load()
+const gmapsLoaderPromise = Promise.all([
+  importLibrary('core'),
+  importLibrary('places'),
+  importLibrary('geocoding'),
+  importLibrary('geometry')
+]).then(() => window.google)
 
 gmapsLoaderPromise.then(google => {
   const geocoder = new google.maps.Geocoder()
