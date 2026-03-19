@@ -1,5 +1,8 @@
 # Repository Guidelines
 
+## Hosting
+Hosted with firebase hosting at http://praytime.app
+
 ## Project Structure & Module Organization
 `src/index.js` is the main frontend entry, with `src/index.html` as the HTML template. Service workers are bundled from `src/sw.js` and `src/firebase-messaging-sw.js`. Static assets such as favicons, the web manifest, and the custom `404.html` live in `src/static/` and are copied into `dist/` during builds. Firebase Cloud Functions are isolated under `functions/index.js`. Treat `dist/` as generated output for Firebase Hosting, not as a source directory.
 
