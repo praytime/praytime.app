@@ -419,6 +419,11 @@ window.getCurrentPosition = getCurrentPosition
 
 function docToEvent (doc) {
   const evt = doc.data()
+  const crawlTime = (
+    evt.crawlTime && typeof evt.crawlTime.toDate === 'function'
+      ? evt.crawlTime.toDate()
+      : (evt.crawlTime instanceof Date ? evt.crawlTime : null)
+  )
 
   const times = SunCalc.getTimes(now, evt.geo.latitude, evt.geo.longitude)
   const fcmTopic = '/topics/' + doc.id
@@ -441,8 +446,9 @@ function docToEvent (doc) {
     juma1IsModified: (evt.juma1Modified && hoursSince(evt.juma1Modified.toDate()) < 24),
     juma2IsModified: (evt.juma2Modified && hoursSince(evt.juma2Modified.toDate()) < 24),
     juma3IsModified: (evt.juma3Modified && hoursSince(evt.juma3Modified.toDate()) < 24),
-    updatedLabel: timeSince(evt.crawlTime.toDate()),
-    stale: (hoursSince(evt.crawlTime.toDate()) > 12)
+    showUpdatedLabel: (!evt.isStatic && Boolean(crawlTime)),
+    updatedLabel: crawlTime ? timeSince(crawlTime) : '',
+    stale: (crawlTime ? (hoursSince(crawlTime) > 12) : false)
   }, evt)
   return merged
 }
