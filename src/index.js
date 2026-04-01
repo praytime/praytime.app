@@ -19,6 +19,12 @@ setOptions({
   v: 'weekly'
 })
 
+let placeAutocomplete = null
+let syncLocationSearchDisabled = function () {}
+let lastPlaceAutocompleteSelectionAt = 0
+let lastManualLocationSearchAt = 0
+let lastManualLocationSearchQuery = ''
+
 const gmapsLoaderPromise = Promise.all([
   importLibrary('core'),
   importLibrary('places'),
@@ -28,26 +34,72 @@ const gmapsLoaderPromise = Promise.all([
 
 gmapsLoaderPromise.then(google => {
   const geocoder = new google.maps.Geocoder()
-  const autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'), {
-    types: ['geocode'],
-    fields: ['name', 'geometry.location']
+  const locationSearchContainer = document.getElementById('autocomplete')
+  const locationSearchForm = document.getElementById('location-search-form')
+
+  placeAutocomplete = new google.maps.places.PlaceAutocompleteElement({
+    name: 'location',
+    placeholder: 'Enter a location'
   })
-  autocomplete.addListener('place_changed', () => {
-    const place = autocomplete.getPlace()
-    if (place.geometry) {
-      // got results
-      getPrayerTimesForLocation(place.name, place.geometry.location, google)
+
+  placeAutocomplete.id = 'place-autocomplete'
+  placeAutocomplete.classList.add('location-search-control')
+  locationSearchContainer.replaceChildren(placeAutocomplete)
+
+  syncLocationSearchDisabled = function (disabled = vApp && vApp.inputDisabled) {
+    const isDisabled = Boolean(disabled)
+    placeAutocomplete.classList.toggle('location-search-disabled', isDisabled)
+    placeAutocomplete.setAttribute('aria-disabled', String(isDisabled))
+    if (isDisabled) {
+      placeAutocomplete.setAttribute('inert', '')
     } else {
-      // need to do a search
-      geocoder.geocode({ address: document.getElementById('autocomplete').value }, (results, status) => {
-        if (status === 'OK') {
-          getPrayerTimesForLocation(results[0].formatted_address, results[0].geometry.location, google)
-        } else {
-          vApp.message = 'Not found: ' + status
-          vApp.messageClass = 'text-warning'
-        }
-      })
+      placeAutocomplete.removeAttribute('inert')
     }
+  }
+  syncLocationSearchDisabled()
+
+  placeAutocomplete.addEventListener('gmp-select', async ({ placePrediction }) => {
+    lastPlaceAutocompleteSelectionAt = Date.now()
+
+    try {
+      const place = placePrediction.toPlace()
+      await place.fetchFields({
+        fields: ['displayName', 'formattedAddress', 'location']
+      })
+
+      if (place.location) {
+        getPrayerTimesForLocation(
+          place.displayName || place.formattedAddress || getLocationSearchQuery(),
+          normalizeLocation(place.location, google),
+          google
+        )
+        return
+      }
+    } catch (err) {
+      console.error('[place autocomplete] selection error:', err)
+    }
+
+    geocodeLocationSearch(geocoder, getLocationSearchQuery(), google)
+  })
+
+  placeAutocomplete.addEventListener('gmp-error', (event) => {
+    console.error('[place autocomplete] backend error:', event)
+    vApp.message = 'Location search is temporarily unavailable. Please try again.'
+    vApp.messageClass = 'text-warning'
+  })
+
+  placeAutocomplete.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' || event.defaultPrevented) {
+      return
+    }
+
+    queueManualLocationSearch(getLocationSearchQuery(), geocoder, google)
+  })
+
+  locationSearchForm.addEventListener('submit', (event) => {
+    event.preventDefault()
+
+    queueManualLocationSearch(getLocationSearchQuery(), geocoder, google)
   })
 }).catch(err => {
   console.error('[gmaps loader] error:', err)
@@ -91,6 +143,11 @@ const vApp = new Vue({
     message: '',
     messageClass: 'text-secondary',
     events: []
+  },
+  watch: {
+    inputDisabled: function (disabled) {
+      syncLocationSearchDisabled(disabled)
+    }
   },
   methods: {
     toggleNotification: function (event) {
@@ -416,6 +473,66 @@ function getCurrentPosition () {
 // "export" so it can be called from index.html
 // https://stackoverflow.com/a/56805689
 window.getCurrentPosition = getCurrentPosition
+
+function getLocationSearchQuery () {
+  return placeAutocomplete && typeof placeAutocomplete.value === 'string'
+    ? placeAutocomplete.value.trim()
+    : ''
+}
+
+function geocodeLocationSearch (geocoder, query, google) {
+  const trimmedQuery = (query || '').trim()
+  if (!trimmedQuery) {
+    return
+  }
+
+  geocoder.geocode({ address: trimmedQuery }, (results, status) => {
+    if (status === 'OK' && results && results[0] && results[0].geometry && results[0].geometry.location) {
+      const locationDescription = results[0].formatted_address || trimmedQuery
+      if (placeAutocomplete) {
+        placeAutocomplete.value = locationDescription
+      }
+      getPrayerTimesForLocation(locationDescription, results[0].geometry.location, google)
+    } else {
+      vApp.message = 'Not found: ' + status
+      vApp.messageClass = 'text-warning'
+    }
+  })
+}
+
+function queueManualLocationSearch (query, geocoder, google) {
+  window.setTimeout(() => {
+    const trimmedQuery = (query || '').trim()
+    if (!trimmedQuery) {
+      return
+    }
+
+    const now = Date.now()
+    if (now - lastPlaceAutocompleteSelectionAt < 250) {
+      return
+    }
+
+    if (trimmedQuery === lastManualLocationSearchQuery && now - lastManualLocationSearchAt < 250) {
+      return
+    }
+
+    lastManualLocationSearchAt = now
+    lastManualLocationSearchQuery = trimmedQuery
+    geocodeLocationSearch(geocoder, trimmedQuery, google)
+  }, 0)
+}
+
+function normalizeLocation (location, google) {
+  if (location && typeof location.lat === 'function' && typeof location.lng === 'function') {
+    return location
+  }
+
+  if (location && typeof location.lat === 'number' && typeof location.lng === 'number') {
+    return new google.maps.LatLng(location.lat, location.lng)
+  }
+
+  throw new Error('Selected place did not include a valid location')
+}
 
 function docToEvent (doc) {
   const evt = doc.data()

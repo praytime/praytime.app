@@ -32,6 +32,38 @@
     [v-cloak] {
       display: none;
     }
+
+    #autocomplete {
+      min-height: calc(1.5em + .75rem + 2px);
+    }
+
+    .location-search-control {
+      display: block;
+      width: 100%;
+      color-scheme: light;
+    }
+
+    .location-search-control::part(input) {
+      min-height: calc(1.5em + .75rem + 2px);
+      padding: .375rem .75rem;
+      border: 1px solid #ced4da;
+      border-radius: .25rem;
+      background-color: #fff;
+      color: #495057;
+      font: inherit;
+      line-height: 1.5;
+    }
+
+    .location-search-control::part(prediction-list) {
+      border: 1px solid rgba(0, 0, 0, .15);
+      border-radius: .25rem;
+      box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+    }
+
+    .location-search-disabled {
+      opacity: .65;
+      pointer-events: none;
+    }
   </style>
 
   <title>praytime | masjid iqamah times</title>
@@ -64,10 +96,10 @@
       <small class="text-muted">masjid iqamah times</small>
     </h1>
     <div id="locationField">
-      <form>
+      <form id="location-search-form">
         <div class="row">
           <div class="col">
-            <input type="text" class="form-control" id="autocomplete" placeholder="Enter a location" :disabled="inputDisabled"/>
+            <div id="autocomplete"></div>
           </div>
           <div class="col">
             <button class="form-control btn btn-primary btn-sm" :disabled="inputDisabled" onclick="getCurrentPosition();return false;">Use current location</button>
